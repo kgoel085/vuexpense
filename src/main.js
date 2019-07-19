@@ -6,6 +6,9 @@ import store from './store'
 import 'roboto-fontface/css/roboto/roboto-fontface.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
 
+// Initialize firebase hook for vue object 
+import './helpers/firebase';
+
 Vue.config.productionTip = false
 
 new Vue({
