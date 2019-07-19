@@ -13,4 +13,7 @@ Vue.use(Vuetify, {
     warning: '#FFC107'
   },
   iconfont: 'md',
+  options: {
+    customProperties: true
+  }
 })
