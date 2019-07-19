@@ -8,26 +8,24 @@
       <v-spacer></v-spacer>
       <v-btn
         flat
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
+        to="/login"
       >
-        <span class="mr-2">Latest Release</span>
+        <span class="mr-2">Login</span>
       </v-btn>
     </v-toolbar>
 
     <v-content>
-      <HelloWorld/>
+      <!-- <HelloWorld/> -->
+      <router-view></router-view>
     </v-content>
   </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld'
-
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    
   },
   data () {
     return {
