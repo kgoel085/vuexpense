@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import store from '../store'
 
 // Include firebase core, auth, fire-store
 import firebase from 'firebase/app';
@@ -40,7 +41,14 @@ let fBase = (function(){
         let app = (app !== undefined) ? app : initApp();
 
         // If yes, return firestore instance
-        if(app) return fAuth = app.auth();
+        if(app){
+            fAuth = app.auth();
+
+            // Add auth update event to update state for auth user
+            fAuth.onAuthStateChanged(usr => store.commit('setUser', usr));
+           
+            return fAuth;
+        }
     };
 
     // Initialize firestore instance from initiated app
