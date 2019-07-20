@@ -3,7 +3,7 @@
         <v-container fluid>
             <v-layout row wrap>
                 <v-flex xs12>
-                    <h1>Login</h1>
+                    <h1>Sign Up</h1>
                 </v-flex>
             </v-layout>
         </v-container>
@@ -16,12 +16,17 @@
                     <v-text-field label="Email" v-model="formData.email.value" :rules="formData.email.rules"></v-text-field>
                 </v-flex>
                 <v-flex xs12>
-                    <v-flex xs12>
-                        <v-text-field :type="formData.password.showPass ? 'text' : 'password'" label="Password" v-model="formData.password.value" :rules="formData.password.rules" @click:append="formData.password.showPass = !formData.password.showPass" :append-icon="formData.password.showPass ? 'visibility' : 'visibility_off'"></v-text-field>
-                    </v-flex>
+                    <v-layout row wrap>
+                        <v-flex xs12 sm6 md6 lg6 xl6 class="pa-1">
+                            <v-text-field :type="formData.password.showPass ? 'text' : 'password'" label="Password" v-model="formData.password.value" :rules="formData.password.rules" @click:append="formData.password.showPass = !formData.password.showPass" :append-icon="formData.password.showPass ? 'visibility' : 'visibility_off'"></v-text-field>
+                        </v-flex>
+                        <v-flex xs12 sm6 md6 lg6 xl6 class="pa-1">
+                            <v-text-field :type="formData.confirmPassword.showPass ? 'text' : 'password'" label="Confirm Password" v-model="formData.confirmPassword.value" :rules="formData.confirmPassword.rules" @click:append="formData.confirmPassword.showPass = !formData.confirmPassword.showPass" :append-icon="formData.confirmPassword.showPass ? 'visibility' : 'visibility_off'"></v-text-field>
+                        </v-flex>
+                    </v-layout>
                 </v-flex>
                 <v-flex xs12 class="text-xs-center">
-                    <v-btn flat @click="valdiate" class="secondary" :disabled="!formData.valid">Login</v-btn>
+                    <v-btn flat @click="valdiate" class="secondary" :disabled="!formData.valid">Sign Up</v-btn>
                 </v-flex>
             </v-layout>
         </v-container>
@@ -52,6 +57,13 @@ export default {
                     showPass: false, 
                     rules:[
                         v => !!v || 'Password is required'
+                    ]
+                },
+                confirmPassword: {
+                    value: null, 
+                    showPass: false,
+                    rules:[
+                        v => (!!v && v) === this.formData.password.value || 'Password does not matches'
                     ]
                 },
                 valid: false

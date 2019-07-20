@@ -21,6 +21,15 @@ export default new Router({
         store.commit('setNav', false);
         nxt();
       }
+    },
+    {
+      path: '/signup',
+      name: 'signup',
+      component: () => import('./views/Signup.vue'),
+      beforeEnter(to, frm, nxt){
+        store.commit('setNav', false);
+        nxt();
+      }
     }
   ]
 })
