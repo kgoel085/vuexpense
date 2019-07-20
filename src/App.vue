@@ -1,31 +1,24 @@
 <template>
   <v-app>
-    <v-toolbar app>
-      <v-toolbar-title class="headline text-uppercase">
-        <span>Vuetify</span>
-        <span class="font-weight-light">MATERIAL DESIGN</span>
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-btn
-        flat
-        to="/login"
-      >
-        <span class="mr-2">Login</span>
-      </v-btn>
-    </v-toolbar>
+    <!-- Navbar --> 
+    <Navbar></Navbar>  
 
     <v-content>
-      <!-- <HelloWorld/> -->
+      
+      <!-- Router views -->
       <router-view></router-view>
+
     </v-content>
   </v-app>
 </template>
 
 <script>
+import Navbar from './components/Navbar';
+
 export default {
   name: 'App',
   components: {
-    
+    Navbar
   },
   data () {
     return {
