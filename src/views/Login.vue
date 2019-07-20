@@ -16,9 +16,7 @@
                     <v-text-field label="Email" v-model="formData.email.value" :rules="formData.email.rules"></v-text-field>
                 </v-flex>
                 <v-flex xs12>
-                    <v-flex xs12>
-                        <v-text-field :type="formData.password.showPass ? 'text' : 'password'" label="Password" v-model="formData.password.value" :rules="formData.password.rules" @click:append="formData.password.showPass = !formData.password.showPass" :append-icon="formData.password.showPass ? 'visibility' : 'visibility_off'"></v-text-field>
-                    </v-flex>
+                    <v-text-field :type="formData.password.showPass ? 'text' : 'password'" label="Password" v-model="formData.password.value" :rules="formData.password.rules" @click:append="formData.password.showPass = !formData.password.showPass" :append-icon="formData.password.showPass ? 'visibility' : 'visibility_off'"></v-text-field>
                 </v-flex>
                 <v-flex xs12 class="text-xs-center">
                     <v-btn flat @click="valdiate" class="secondary" :disabled="!formData.valid">Login</v-btn>
