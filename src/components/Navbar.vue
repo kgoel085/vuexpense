@@ -11,6 +11,9 @@
       >
         <span class="mr-2">Login</span>
       </v-btn>
+      <v-btn flat @click="logout">
+        Logout
+      </v-btn>
     </v-toolbar>
 </template>
 
@@ -22,9 +25,23 @@ export default {
         }
     },
     computed:{
+      // Show / Hide navbar 
         show(){
             return this.$store.state.global.showNav;
         }
+    },
+    methods:{
+      // Logout current user
+      logout(){
+        this.$__firebase.fireauth.signOut().then(resp => {
+          console.log('User signed out');
+          this.$router.push({
+            name: 'login'
+          });
+        }).catch(err => {
+          console.log(err);
+        });
+      }
     }
 }
 </script>
