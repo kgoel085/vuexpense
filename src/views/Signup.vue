@@ -1,5 +1,5 @@
 <template>
-    <v-form ref="loginForm" v-model="formData.valid">
+    <v-form ref="signupForm" v-model="formData.valid">
         <v-container fluid>
             <v-layout row wrap>
                 <v-flex xs12>
@@ -74,9 +74,11 @@ export default {
         // Validates and login
         valdiate(){
             // If form is validated
-            if(this.$refs.loginForm.validate()) {
+            if(this.$refs.signupForm.validate()) {
                 let formDt = {};
                 Object.keys(this.formData).forEach(field => formDt[field] = this.formData[field].value);
+
+                return false;
             }
 
             alert('Form not valid. Please provide all the required fields');
