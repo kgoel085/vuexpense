@@ -4,7 +4,7 @@ import store from './store';
 
 Vue.use(Router)
 
-export default new Router({
+const router = new Router({
   mode: 'history',
   base: process.env.BASE_URL,
   routes: [
@@ -16,20 +16,22 @@ export default new Router({
     {
       path: '/login',
       name: 'login',
-      component: () => import('./views/Login.vue'),
-      beforeEnter(to, frm, nxt){
-        store.commit('setNav', false);
-        nxt();
-      }
+      component: () => import('./views/Login.vue')
     },
     {
       path: '/signup',
       name: 'signup',
-      component: () => import('./views/Signup.vue'),
-      beforeEnter(to, frm, nxt){
-        store.commit('setNav', false);
-        nxt();
-      }
+      props:{loginPg: false},
+      component: () => import('./views/Login.vue')
     }
   ]
-})
+});
+
+router.beforeEach((to, frm, nxt) => {
+  if(to.name == 'login' || to.name == 'signup') store.commit('setNav', false);
+  else store.commit('setNav', true);
+
+  nxt();
+});
+
+export default router
