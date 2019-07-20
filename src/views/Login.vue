@@ -63,6 +63,8 @@ export default {
             if(this.$refs.loginForm.validate()) {
                 let formDt = {};
                 Object.keys(this.formData).forEach(field => formDt[field] = this.formData[field].value);
+
+                return false;
             }
 
             alert('Form not valid. Please provide all the required fields');
