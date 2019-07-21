@@ -7,12 +7,18 @@ import 'roboto-fontface/css/roboto/roboto-fontface.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
 
 // Initialize firebase hook for vue object 
-import './helpers/firebase';
+import fBase from './helpers/firebase';
 
 Vue.config.productionTip = false
 
-new Vue({
-  router,
-  store,
-  render: h => h(App)
-}).$mount('#app')
+// Only mount app, if firebase auth object is ready to use
+fBase.fireauth.onAuthStateChanged(usr => {
+  new Vue({
+    router,
+    store,
+    render: h => h(App)
+  }).$mount('#app');
+
+  store.commit('setUser', usr);
+});
+

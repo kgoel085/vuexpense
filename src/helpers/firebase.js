@@ -45,7 +45,7 @@ let fBase = (function(){
             fAuth = app.auth();
 
             // Add auth update event to update state for auth user
-            fAuth.onAuthStateChanged(usr => store.commit('setUser', usr));
+            //fAuth.onAuthStateChanged(usr => store.commit('setUser', usr));
            
             return fAuth;
         }
