@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import store from './store';
+import store from './store'
+import firebase from './helpers/firebase'
 
 Vue.use(Router)
 
@@ -38,10 +39,8 @@ router.beforeEach((to, frm, nxt) => {
     store.commit('setNav', true);
 
     // Check if user is logged in or not
-    if(!store.state.firebase.user){
-      nxt('/login');
-      return false;
-    }
+    let currentUser = firebase.fireauth.currentUser;
+    if(!currentUser) nxt('login');
   }  
 
   nxt();
