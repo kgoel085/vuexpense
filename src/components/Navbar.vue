@@ -5,15 +5,12 @@
         <span class="font-weight-light">MATERIAL DESIGN</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn
-        flat
-        to="/login"
-      >
-        <span class="mr-2">Login</span>
-      </v-btn>
-      <v-btn flat @click="logout">
+
+      <!-- User is logged in -->
+      <v-btn v-if="$store.state.firebase.user" flat @click="logout">
         Logout
       </v-btn>
+
     </v-toolbar>
 </template>
 
@@ -34,9 +31,9 @@ export default {
       // Logout current user
       logout(){
         this.$__firebase.fireauth.signOut().then(resp => {
-          console.log('User signed out');
           this.$router.push({
-            name: 'login'
+            name: 'login',
+            params: {msg: 'User Logged Out successfully'}
           });
         }).catch(err => {
           console.log(err);
