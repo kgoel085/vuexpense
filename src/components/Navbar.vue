@@ -30,15 +30,7 @@ export default {
     methods:{
       // Logout current user
       logout(){
-        this.$__firebase.fireauth.signOut().then(resp => {
-          this.$store.commit('setUser', null);
-          this.$router.push({
-            name: 'login',
-            params: {msg: 'User Logged Out successfully'}
-          });
-        }).catch(err => {
-          this.$store.commit('setSnackMsg', 'User logged in successfully.');
-        });
+        this.$__firebase.fireauth.signOut();
       }
     }
 }
