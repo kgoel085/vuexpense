@@ -30,9 +30,25 @@
                 </v-flex>
                 <v-flex xs12 class="text-xs-center">
                     <v-btn flat @click="valdiate" class="secondary" :disabled="!formData.valid">{{ title }}</v-btn>
+                    <v-btn flat to="/signup" class="secondary" v-if="loginPg">Sign Up</v-btn>
                 </v-flex>
             </v-layout>
         </v-container>
+
+        <!-- Show login / signup related msgs -->
+        <v-snackbar
+            v-model="snackbar.show"
+            :color="snackbar.color"
+        >
+            {{ snackbar.msg }}
+            <v-btn
+                dark
+                flat
+                @click="snackbar.show = false; snackbar.msg = null; snackbar.color = 'error' "
+            >
+                Close
+            </v-btn>
+        </v-snackbar>
     </v-form>
 </template>
 
@@ -40,6 +56,11 @@
 export default {
     data(){
         return{
+            snackbar: {
+                show: false,
+                msg: null,
+                color: 'error'
+            },
             formData:{
                 username: {
                     value: null, 
@@ -94,7 +115,10 @@ export default {
                 return false;
             }
 
-            alert('Form not valid. Please provide all the required fields');
+            this.snackbar.msg = 'Form not valid. Please provide all the required fields';
+            this.snackbar.color = 'error';
+            this.snackbar.show = true; 
+
             return false;
         },
         
@@ -113,13 +137,17 @@ export default {
 
                     // Sign out new user , default working of firebase
                     this.$__firebase.fireauth.signOut();
+                }else{
+                    if(resp.hasOwnProperty('user')){
+                        this.$store.commit('setUser', resp.user);
+                    }
                 }
 
                 // Push to the decided page / route
                 this.$router.push({name: routeName});
-
             }).catch(err => {
-                console.log(err);
+                this.snackbar.msg = err.message;
+                this.snackbar.show = true;
             });
             
         }
@@ -128,6 +156,23 @@ export default {
         loginPg:{
             default: true,
             type: Boolean
+        },
+        msg:{
+            default: null,
+            type: String
+        }
+    },
+    mounted(){
+        // If signed / logged in redirect to home
+        if(this.$store.state.firebase.user){
+            this.$router.push({name: 'home'});
+        }
+
+        // Show msg if set any
+        if(this.msg){
+            this.snackbar.msg = this.msg;
+            this.snackbar.color = "info";
+            this.snackbar.show = true;
         }
     }
 }
