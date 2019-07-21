@@ -143,6 +143,7 @@ export default {
                     }
                 }
 
+                if(routeName == 'home') this.$store.commit('setSnackMsg', 'User logged in successfully.');
                 // Push to the decided page / route
                 this.$router.push({name: routeName});
             }).catch(err => {
