@@ -16,6 +16,7 @@ const router = new Router({
     {
       path: '/login',
       name: 'login',
+      props: true,
       component: () => import('./views/Login.vue')
     },
     {
@@ -27,9 +28,21 @@ const router = new Router({
   ]
 });
 
+// Set up auth for each route 
 router.beforeEach((to, frm, nxt) => {
-  if(to.name == 'login' || to.name == 'signup') store.commit('setNav', false);
-  else store.commit('setNav', true);
+  // For login / signup routes only
+  if(to.name == 'login' || to.name == 'signup'){
+    store.commit('setNav', false);
+  }else{
+    // For every other routes
+    store.commit('setNav', true);
+
+    // Check if user is logged in or not
+    if(!store.state.firebase.user){
+      nxt('/login');
+      return false;
+    }
+  }  
 
   nxt();
 });
