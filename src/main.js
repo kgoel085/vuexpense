@@ -19,6 +19,15 @@ fBase.fireauth.onAuthStateChanged(usr => {
     render: h => h(App)
   }).$mount('#app');
 
+  let firstTimeUser = (store.state.firebase.user) ? false : true;
+
   store.commit('setUser', usr);
+
+  if(!usr){
+    let routeObj = {name: 'login'};
+    if(!firstTimeUser) routeObj['params'] = {msg: 'User Logged / Timed Out '};
+
+    router.push(routeObj);
+  }
 });
 
