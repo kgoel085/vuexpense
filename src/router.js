@@ -1,25 +1,57 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from './views/Home.vue'
+import store from './store'
+import firebase from './helpers/firebase'
 
 Vue.use(Router)
 
-export default new Router({
+const router = new Router({
   mode: 'history',
   base: process.env.BASE_URL,
   routes: [
     {
-      path: '/',
-      name: 'home',
-      component: Home
+      path: '*',
+      redirect: '/login'
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ './views/About.vue')
+      path: '/',
+      redirect: '/login'
+    },
+    {
+      path: '/home',
+      name: 'home',
+      component: () => import('./views/Home.vue')
+    },
+    {
+      path: '/login',
+      name: 'login',
+      props: true,
+      component: () => import('./views/Login.vue')
+    },
+    {
+      path: '/signup',
+      name: 'signup',
+      props:{loginPg: false},
+      component: () => import('./views/Login.vue')
     }
   ]
-})
+});
+
+// Set up auth for each route 
+router.beforeEach((to, frm, nxt) => {
+  // For login / signup routes only
+  if(to.name == 'login' || to.name == 'signup'){
+    store.commit('setNav', false);
+  }else{
+    // For every other routes
+    store.commit('setNav', true);
+
+    // Check if user is logged in or not
+    let currentUser = firebase.fireauth.currentUser;
+    if(!currentUser) nxt('login');
+  }  
+
+  nxt();
+});
+
+export default router

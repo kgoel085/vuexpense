@@ -1,37 +1,60 @@
 <template>
   <v-app>
-    <v-toolbar app>
-      <v-toolbar-title class="headline text-uppercase">
-        <span>Vuetify</span>
-        <span class="font-weight-light">MATERIAL DESIGN</span>
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-btn
-        flat
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-      >
-        <span class="mr-2">Latest Release</span>
-      </v-btn>
-    </v-toolbar>
+    <!-- Navbar --> 
+    <Navbar></Navbar>  
 
     <v-content>
-      <HelloWorld/>
+      
+      <!-- Router views -->
+      <router-view></router-view>
+
     </v-content>
+
+    <!-- Snackbar -->
+    <v-snackbar v-model="snackbarShow" color="info" >
+      {{ snackbarMsg }}
+      <v-btn
+          dark
+          flat
+          @click="snackbarShow = false;"
+      >
+          Close
+      </v-btn>
+    </v-snackbar>
   </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld'
+import Navbar from './components/Navbar';
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    Navbar
   },
   data () {
     return {
-      //
+      snackbarShow: false
+    }
+  },
+  watch:{
+    // If snackbar is closed remove the global snack msg
+    snackbarShow(val){
+      if(val == false){
+        this.$store.commit('setSnackMsg', null);
+      }
+    }
+  },
+  computed:{
+    // Snackbar message
+    snackbarMsg(){
+      if(this.$store.state.global.snackbar.msg){
+        this.snackbarShow = true;
+        return this.$store.state.global.snackbar.msg;
+      }else{
+        this.snackbarShow = false;
+      }
+      return null;
     }
   }
 }
