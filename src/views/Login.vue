@@ -30,7 +30,7 @@
                 </v-flex>
                 <v-flex xs12 class="text-xs-center">
                     <v-btn flat @click="valdiate" class="secondary" :disabled="!formData.valid">{{ title }}</v-btn>
-                    <v-btn flat to="/signup" class="secondary" v-if="loginPg">Sign Up</v-btn>
+                    <v-btn flat :to="btnUrl" class="secondary">{{ btnTitle }}</v-btn>
                 </v-flex>
             </v-layout>
         </v-container>
@@ -56,11 +56,17 @@
 export default {
     data(){
         return{
+            // Secondary btn title
+            btnTitle: null,
+
+            // Info snackbar
             snackbar: {
                 show: false,
                 msg: null,
                 color: 'error'
             },
+
+            // Form validation rules
             formData:{
                 username: {
                     value: null, 
@@ -96,9 +102,21 @@ export default {
         }
     },
     computed:{
+        // Returns title
         title(){
-            if(this.loginPg) return 'Login';
+            if(this.loginPg){
+                this.btnTitle = 'Sign Up';
+                return 'Login';
+            }
+            
+            this.btnTitle = 'Login';
             return 'Sign Up';
+        },
+
+        // Handles the second button on the page, 
+        btnUrl(){
+            if(this.loginPg) return '/signup';
+            return '/login';
         }
     },
     methods:{
@@ -115,6 +133,7 @@ export default {
                 return false;
             }
 
+            // Show error
             this.snackbar.msg = 'Form not valid. Please provide all the required fields';
             this.snackbar.color = 'error';
             this.snackbar.show = true; 
@@ -154,10 +173,13 @@ export default {
         }
     },
     props:{
+        // Decides whether a login / sign up page is requested
         loginPg:{
             default: true,
             type: Boolean
         },
+
+        // Show msg in the snackbar is set
         msg:{
             default: null,
             type: String
