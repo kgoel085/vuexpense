@@ -27,11 +27,7 @@
 							</v-list-tile-content>
 
 							<v-list-tile-action>
-								<v-btn
-									:class="fav ? 'red--text' : ''"
-									icon
-									@click="fav = !fav"
-								>
+								<v-btn icon>
 									<v-icon>favorite</v-icon>
 								</v-btn>
 							</v-list-tile-action>
