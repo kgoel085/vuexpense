@@ -5,12 +5,20 @@ const firebase = {
         user: false,
 
         // Default profile pic for every user
-        defaultProfile: 'https://api.adorable.io/avatars/400/abott@adorable'
+        defaultProfile: 'https://api.adorable.io/avatars/400/abott@adorable',
+
+        // User is newly created 
+        newUser: false
     },
     mutations: {
-        // Sets teh current auth state of the user
+        // Sets the current auth state of the user
         setUser(state, usr = false){
             state.user = usr;
+        },
+
+        // Sets the current state of the signed up user
+        setNewUser(state, usr = false){
+            state.newUser = usr;
         }
     },
     actions: {
