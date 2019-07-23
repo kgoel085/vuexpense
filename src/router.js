@@ -5,6 +5,22 @@ import firebase from './helpers/firebase'
 
 Vue.use(Router)
 
+// Check if user is a new user or not, If yes redirect to complete setup
+const checkUser = async (nxt) => {
+  // If user state isalready to new, redirect to user setup
+  if(store.state.firebase.newUser) nxt('user');
+
+  let userDoc = firebase.firestore.collection('users').doc(firebase.fireauth.currentUser.uid);
+  await userDoc.get().then(doc => {
+    if(doc.exists){
+      let userData = doc.data();
+
+      // Check if user is still new or not, if yes redirectto user setup
+      if(userData.hasOwnProperty('newUser') && userData.newUser) nxt('user');
+    }
+  });
+};
+
 const router = new Router({
   mode: 'history',
   base: process.env.BASE_URL,
@@ -54,6 +70,11 @@ router.beforeEach((to, frm, nxt) => {
     // Check if user is logged in or not
     let currentUser = firebase.fireauth.currentUser;
     if(!currentUser) nxt('login');
+    else{
+      // Check if user is a new user or not 
+      checkUser(nxt);
+    }
+
   }  
 
   nxt();
