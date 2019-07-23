@@ -9,8 +9,8 @@
         </v-container>
         <v-container>
             <v-layout row wrap>
-                <v-flex xs12>
-                    <!-- <v-text-field autofocus label="Username" v-model="formData.username.value" :counter="10" :rules="formData.username.rules"></v-text-field> -->
+                <v-flex xs12 v-if="!loginPg" >
+                    <v-text-field autofocus label="Username" v-model="formData.username.value" :counter="10" :rules="formData.username.rules"></v-text-field>
                 </v-flex>
                 <v-flex xs12>
                     <v-text-field label="Email" v-model="formData.email.value" :rules="formData.email.rules"></v-text-field>
@@ -146,25 +146,35 @@ export default {
             // Set required function to be called
             let auth = (this.loginPg) ? 'signInWithEmailAndPassword' : 'createUserWithEmailAndPassword';
             this.$__firebase.fireauth[auth](email, pass).then(resp => {
-                this.$refs.loginForm.reset();
-
                 let routeName = 'home';
 
                 // If page is not login
                 if(!this.loginPg){
                     routeName = 'login';
-
-                    // Sign out new user , default working of firebase
-                    this.$__firebase.fireauth.signOut();
+                    
+                    // Update user name
+                    resp.user.updateProfile({
+                        displayName: this.formData.username.value 
+                    }).then(response => {
+                        // Sign out new user , default working of firebase
+                        this.$__firebase.fireauth.signOut();
+                    }).catch(err => {
+                        this.snackbar.msg = err.message;
+                        this.snackbar.show = true;
+                    });
+                    
                 }else{
+                    // For logged in user
                     if(resp.hasOwnProperty('user')){
                         this.$store.commit('setUser', resp.user);
                     }
+
+                    if(routeName == 'home') this.$store.commit('setSnackMsg', 'User logged in successfully.');
+                    this.$router.push({name: routeName});
                 }
 
-                if(routeName == 'home') this.$store.commit('setSnackMsg', 'User logged in successfully.');
-                // Push to the decided page / route
-                this.$router.push({name: routeName});
+                this.$refs.loginForm.reset();
+                
             }).catch(err => {
                 this.snackbar.msg = err.message;
                 this.snackbar.show = true;
