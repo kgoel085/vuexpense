@@ -165,7 +165,7 @@ export default {
                     // For logged in user
                     if(resp.hasOwnProperty('user')){
                         this.$store.commit('setUser', resp.user);
-                        this.$store.commit('setNewUser', false);
+                        //this.$store.commit('setNewUser', false);
 
                         this.$store.commit('setSnackMsg', 'User logged in successfully.');
                     }
