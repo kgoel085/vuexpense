@@ -33,6 +33,11 @@ const router = new Router({
       name: 'signup',
       props:{loginPg: false},
       component: () => import('./views/Login.vue')
+    },
+    {
+      path: '/user',
+      name: 'user',
+      component: () => import('./views/User.vue')
     }
   ]
 });
