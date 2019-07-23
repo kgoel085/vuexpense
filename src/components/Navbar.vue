@@ -7,10 +7,23 @@
       <v-spacer></v-spacer>
 
       <!-- User is logged in -->
-      <v-btn v-if="$store.state.firebase.user" flat @click="logout">
-        Logout
-      </v-btn>
-
+      <template v-if="$store.state.firebase.user">
+        <v-menu open-on-hover bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              color="secondary"
+              v-on="on"
+            >
+              {{ $store.state.firebase.user.displayName }}
+            </v-btn>
+          </template>
+            <v-list>
+              <v-list-item class="pa-0 ma-0">
+                <v-btn flat @click="logout">Logout</v-btn>
+              </v-list-item>
+            </v-list>
+        </v-menu>
+      </template>
     </v-toolbar>
 </template>
 
