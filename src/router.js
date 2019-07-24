@@ -6,7 +6,7 @@ import firebase from './helpers/firebase'
 Vue.use(Router)
 
 // Check if user is a new user or not, If yes redirect to complete setup
-const checkUser = async (nxt) => {
+const checkUser = async function(nxt){
   // If user state isalready to new, redirect to user setup
   if(store.state.firebase.newUser) nxt('user');
 
