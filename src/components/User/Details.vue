@@ -33,14 +33,14 @@
                     </v-layout>
                     <v-layout row wap>
                         <v-flex xs4 v-for="(input, indx) in dataCols.input" :key="indx" class="pa-2">
-                            <v-text-field :label="input.title" focus clearable :placeholder="input.title" v-model="input.value" @input="checkFields(indx)"></v-text-field>
+                            <v-text-field :label="input.title" focus :clearable="(!input.hasOwnProperty('readonly')) ? true : false" :readonly="(input.hasOwnProperty('readonly')) ? true : false" :placeholder="input.title" v-model="input.value" @input="checkFields(indx)"></v-text-field>
                         </v-flex>
                     </v-layout>
                 </v-card-text>
                 <v-card-actions>
                     <v-layout row wrap>
                         <v-flex xs12 class="text-xs-center">
-                            <v-btn :disabled="!dirtyVals" flat class="primary">Update</v-btn>
+                            <v-btn :disabled="!dirtyVals" flat class="primary" @click="updateUser">Update</v-btn>
                         </v-flex>
                     </v-layout>
                 </v-card-actions>
@@ -65,12 +65,14 @@ export default {
                     email: {
                         title: 'Email', 
                         value: this.user.email,
-                        dirty: false
+                        dirty: false,
+                        readonly: true
                     },
                     phoneNumber: {
                         title: 'Phone Number',
                         value: this.user.phoneNumber,
-                        dirty: false
+                        dirty: false,
+                        readonly: true
                     },
                 },
 
@@ -127,6 +129,24 @@ export default {
                 // If values are not same, set field as dirty ( Modified )
                 if(newVal && newVal !== oldVal) obj.dirty = true;
                 else obj.dirty = false;
+            }
+        },
+
+        // Update the user with new details
+        updateUser(){
+            let newObj = {};
+
+            Object.keys(this.dataCols.input).forEach((input, field) => {
+                let obj = this.dataCols.input[input];
+                if(obj.dirty) newObj[input] = obj.value;
+            });
+
+            if(Object.keys(newObj).length > 0){
+                this.UserObj.updateProfile(newObj).then(resp => {
+                    this.$store.commit('setSnackMsg', 'User updated');
+                }).catch(err => {
+                    this.$store.commit('setSnackMsg', err.message);
+                });
             }
         }
     },
