@@ -22,12 +22,28 @@
 
                 <!-- User data fields -->
                 <v-card-text class="pa-4">
+                    <v-layout row wrap>
+                        <v-flex class="grow pa-2" v-for="(input, indx) in dataCols.switch" :key="indx">
+                            <v-checkbox
+                                :label="input.title"
+                                :value="input.value"
+                                disabled
+                            ></v-checkbox>
+                        </v-flex>
+                    </v-layout>
                     <v-layout row wap>
                         <v-flex xs4 v-for="(input, indx) in dataCols.input" :key="indx" class="pa-2">
-                            <v-text-field :label="input.title" :placeholder="input.title" v-model="input.value"></v-text-field>
+                            <v-text-field :label="input.title" focus clearable :placeholder="input.title" v-model="input.value" @input="checkFields(indx)"></v-text-field>
                         </v-flex>
                     </v-layout>
                 </v-card-text>
+                <v-card-actions>
+                    <v-layout row wrap>
+                        <v-flex xs12 class="text-xs-center">
+                            <v-btn :disabled="!dirtyVals" flat class="primary">Update</v-btn>
+                        </v-flex>
+                    </v-layout>
+                </v-card-actions>
             </v-card>
         </v-flex>
     </v-layout>
@@ -37,7 +53,33 @@
 export default {
     data(){
         return {
-            
+            // All the below fields are taken from here :
+            // https://firebase.google.com/docs/reference/js/firebase.User
+            dataCols:{
+                input:{
+                    displayName: {
+                        title: 'Display Name', 
+                        value: (this.user.displayName) ? this.user.displayName : '',
+                        dirty: false
+                    },
+                    email: {
+                        title: 'Email', 
+                        value: this.user.email,
+                        dirty: false
+                    },
+                    phoneNumber: {
+                        title: 'Phone Number',
+                        value: this.user.phoneNumber,
+                        dirty: false
+                    },
+                },
+
+                // Status data fields
+                switch:{
+                    emailVerifeid: {title: 'Email Verified', value: (this.user.emailVerifeid)  ? true : false},
+                    isAnonymous: {title: 'Is Anonymous', value: (this.user.isAnonymous)  ? true : false}, 
+                }
+            }
         }
     },
     computed:{
@@ -56,28 +98,36 @@ export default {
             return (this.UserObj.photoURL) ? this.UserObj.photoURL : this.$store.state.firebase.defaultProfile;
         },
 
-        // All the below fields are taken from here :
-        // https://firebase.google.com/docs/reference/js/firebase.User
-        dataCols(){
-            let returnObj = false;
-            if(this.UserObj){
-                returnObj = {
-                    // Input data fields
-                    input:{
-                        displayName: {title: 'Display Name', value: (this.UserObj.displayName) ? this.UserObj.displayName : 'User'},
-                        email: {title: 'Email', value: this.UserObj.email},
-                        phoneNumber: {title: 'Phone Number', value: this.UserObj.phoneNumber},
-                    },
+        // Checks if any default loaded values are changed or not
+        dirtyVals(){
+            let returnVal = false;
 
-                    // Status data fields
-                    switch:{
-                        emailVerifeid: {title: 'Email Verified', value: false},
-                        isAnonymous: {title: 'Is Anonymous', value: true}, 
-                    }
-                }
+            // Check whether any field is modified or not 
+            Object.keys(this.dataCols.input).forEach(key => {
+                let obj = this.dataCols.input[key];
+                if(obj.hasOwnProperty('dirty') && obj.dirty) returnVal = true;
+            });
+
+            // Update whether to proceed for next step or not
+            this.$emit('blockUpdate', 'StepProceed', !returnVal);
+
+            return returnVal;
+        }
+    },
+    methods:{
+        // Checks whether fields are modified or not
+        checkFields(fieldKey = false){
+            if(!fieldKey) return false;
+
+            let obj = (this.dataCols.input.hasOwnProperty(fieldKey)) ? this.dataCols.input[fieldKey] : false;
+            if(obj){
+                let newVal = obj.value;
+                let oldVal = this.UserObj[fieldKey];
+
+                // If values are not same, set field as dirty ( Modified )
+                if(newVal && newVal !== oldVal) obj.dirty = true;
+                else obj.dirty = false;
             }
-
-            return returnObj;
         }
     },
     props:{
