@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app :key="$store.state.global.updateView">
     <!-- Navbar --> 
     <Navbar></Navbar>  
 
