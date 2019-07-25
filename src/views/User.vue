@@ -25,7 +25,7 @@
                         <v-stepper-items>
                             <v-stepper-content v-for="(step, indx) in stepper.header" :step="indx+1" :key="indx" class="pa-0 ma-0">
                                 <!-- Pass current user and related document -->
-                                <component v-if="step.hasOwnProperty('component')" :is="step.component" :user="currentUser" :doc="userData" @updateData="updateUser" @updateStepper="updateStep"></component>
+                                <component v-if="step.hasOwnProperty('component')" :is="step.component" :user="currentUser" :doc="userData" @updateData="updateUser" @updateStepper="updateStep" @blockUpdate="updateStep"></component>
                             </v-stepper-content>
                         </v-stepper-items>
                     </v-stepper>
@@ -49,6 +49,7 @@ export default {
 
             // Manage current stepper
             currentStep: 0,
+            proceedToNextStep: true,
             stepper:{
                 header: [
                     {title: 'Details', completed: false, component: 'UserDetails'},
@@ -90,8 +91,12 @@ export default {
         },
 
         // Update current stepper
-        updateStep(key){
-            console.log(key);
+        updateStep(key, val){
+            switch(key){
+                case 'StepProceed':
+                    this.proceedToNextStep = val
+                break;
+            }
         }
     },
     mounted(){
