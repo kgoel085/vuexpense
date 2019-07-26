@@ -2,22 +2,21 @@
     <v-container>
         <v-layout row wrap v-if="userData">
             <!-- If user is new, show the notice popup -->
-            <v-flex xs12 v-if="userData.hasOwnProperty('newUser')">
-                <v-alert :value="true" type="info" dismissible transition="scale-transition">
-                    Welcome {{ (currentUser.displayName) ? currentUser.displayName : 'User' }}, This setup is a one time mandatory process.<br>
-                    <small>User modifications will be available. Once process is completed</small>
+            <v-flex xs12 v-if="userMsg.hasOwnProperty('msg')">
+                <v-alert :value="true" :type="userMsg.type" dismissible transition="scale-transition">
+                    {{ userMsg.msg }}
                 </v-alert>
             </v-flex>
 
             <v-layout row wrap>
                 <v-flex xs12>
                      <!-- User related steppers -->
-                    <v-stepper v-model="currentStep" non-linear>
+                    <v-stepper non-linear v-model="currentStep" >
                         <!-- Stepper Header -->
                         <v-stepper-header>
                             <template v-for="(step, indx) in stepper.header">
-                                <v-stepper-step :complete="step.complete" :step="indx+1" :key="`${step.title}_${indx+1}`">{{ step.title }}</v-stepper-step>
-                                <v-divider :key="`${step.title}_${indx+22}`"></v-divider>
+                                <v-stepper-step :complete="step.complete" :editable="(proceedToNextStep) ? true : false" :step="indx+1" :key="`${step.title}_${indx+1}`">{{ step.title }}</v-stepper-step>
+                                <v-divider :key="`${step.title}_${indx+22}`" v-if="indx+1 < Object.keys(stepper.header).length"></v-divider>
                             </template>
                         </v-stepper-header>
 
@@ -39,6 +38,7 @@
 <script>
 import loader from '@/components/Loader'
 import UserDetails from '@/components/User/Details'
+import UserRules from '@/components/User/Rules'
 
 export default {
     data(){
@@ -53,14 +53,37 @@ export default {
             stepper:{
                 header: [
                     {title: 'Details', completed: false, component: 'UserDetails'},
-                    {title: 'Finalize', completed: false},
+                    {title: 'Rules', completed: false, component: 'UserRules'}
                 ]
             }
         }
     },
+    computed:{
+        userMsg(){
+            let returnobj = {
+                type: 'info',
+
+            };
+
+            if(this.userData){
+                let doc = this.userData;
+                if(doc.hasOwnProperty('newUser') && doc.newUser){
+                    returnobj['msg'] = `Welcome ${ (this.currentUser.displayName) ? this.currentUser.displayName : 'User' }, This setup is a one time mandatory process.<br>
+                    <small>User modifications will be available. Once process is completed</small>`;
+                }else if(doc.hasOwnProperty('baseData') && !doc.baseData){
+                    returnobj['msg'] = `Welcome ${ (this.currentUser.displayName) ? this.currentUser.displayName : 'User' }, Your rules setup is not completed`;
+                    returnobj['type'] = 'warning';
+                    this.currentStep = 2;
+                }
+            }
+
+            return returnobj;
+        }
+    },
     components:{
         loader,
-        UserDetails
+        UserDetails,
+        UserRules
     },
     methods:{
         // Get current user data document
