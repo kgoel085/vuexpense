@@ -15,8 +15,11 @@ const checkUser = async function(nxt){
     if(doc.exists){
       let userData = doc.data();
 
-      // Check if user is still new or not, if yes redirectto user setup
+      // Check if user is still new or not, if yes redirect to user setup
       if(userData.hasOwnProperty('newUser') && userData.newUser) nxt('user');
+
+      // If user is not new, but the user rules are not present , go to user setup
+      if(userData.hasOwnProperty('baseData') && !userData.baseData) nxt('user');
     }
   });
 };
