@@ -1,58 +1,61 @@
 <template>
-    <v-layout row wrap class="userDetails">
-        <v-flex xs12 class="pa-0 ma-0">
-            <v-card flat tile class="grow">
-                <!-- User Profile -->
-                <v-card-title>
-                    <v-list-tile class="grow">
-                        <v-layout row wrap justify-start align-center>
-                            
-                            <v-list-tile-avatar color="grey darken-3" size="100">
-                                <v-img class="elevation-6" :src="UserPhoto"></v-img>
-                            </v-list-tile-avatar>
+    <v-form v-model="validForm">
+        <v-layout row wrap class="userDetails">
+            <v-flex xs12 class="pa-0 ma-0">
+                <v-card flat tile class="grow">
+                    <!-- User Profile -->
+                    <v-card-title>
+                        <v-list-tile class="grow">
+                            <v-layout row wrap justify-start align-center>
+                                <v-list-tile-avatar color="grey darken-3" size="100">
+                                    <v-img class="elevation-6" :src="UserPhoto"></v-img>
+                                </v-list-tile-avatar>
 
-                            <v-list-tile-content class="px-4">
-                                <v-list-tile-title class="font-weight-medium font-italic">
-                                    {{ ( UserObj.displayName ) ? UserObj.displayName : 'User' }}
-                                </v-list-tile-title>
-                            </v-list-tile-content>
+                                <v-list-tile-content class="px-4">
+                                    <v-list-tile-title class="font-weight-medium font-italic">
+                                        {{ ( UserObj.displayName ) ? UserObj.displayName : 'User' }}
+                                    </v-list-tile-title>
+                                </v-list-tile-content>
+                            </v-layout>
+                        </v-list-tile>
+                    </v-card-title>
+
+                    <!-- User data fields -->
+                    <v-card-text class="pa-4">
+                        <v-layout row wrap>
+                            <v-flex class="grow pa-2" v-for="(input, indx) in dataCols.switch" :key="indx">
+                                <v-checkbox
+                                    :label="input.title"
+                                    :value="input.value"
+                                    disabled
+                                ></v-checkbox>
+                            </v-flex>
                         </v-layout>
-                    </v-list-tile>
-                </v-card-title>
-
-                <!-- User data fields -->
-                <v-card-text class="pa-4">
-                    <v-layout row wrap>
-                        <v-flex class="grow pa-2" v-for="(input, indx) in dataCols.switch" :key="indx">
-                            <v-checkbox
-                                :label="input.title"
-                                :value="input.value"
-                                disabled
-                            ></v-checkbox>
-                        </v-flex>
-                    </v-layout>
-                    <v-layout row wap>
-                        <v-flex xs4 v-for="(input, indx) in dataCols.input" :key="indx" class="pa-2">
-                            <v-text-field :label="input.title" focus :clearable="(!input.hasOwnProperty('readonly')) ? true : false" :readonly="(input.hasOwnProperty('readonly')) ? true : false" :placeholder="input.title" v-model="input.value" @input="checkFields(indx)"></v-text-field>
-                        </v-flex>
-                    </v-layout>
-                </v-card-text>
-                <v-card-actions>
-                    <v-layout row wrap>
-                        <v-flex xs12 class="text-xs-center">
-                            <v-btn :disabled="!dirtyVals" flat class="primary" @click="updateUser">Update</v-btn>
-                        </v-flex>
-                    </v-layout>
-                </v-card-actions>
-            </v-card>
-        </v-flex>
-    </v-layout>
+                        <v-layout row wap>
+                            <v-flex xs4 v-for="(input, indx) in dataCols.input" :key="indx" class="pa-2">
+                                <v-text-field :label="input.title" focus :clearable="(!input.hasOwnProperty('readonly')) ? true : false" :readonly="(input.hasOwnProperty('readonly')) ? true : false" :placeholder="input.title" :required="(input.hasOwnProperty('required')) ? true : false" :rules="(input.hasOwnProperty('rules')) ? input.rules : []" v-model="input.value" @input="checkFields(indx)"></v-text-field>
+                            </v-flex>
+                        </v-layout>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-layout row wrap>
+                            <v-flex xs12 class="text-xs-center">
+                                <v-btn :disabled="!dirtyVals || !validForm" flat class="primary" @click="updateUser">Update</v-btn>
+                            </v-flex>
+                        </v-layout>
+                    </v-card-actions>
+                </v-card>
+            </v-flex>
+        </v-layout>
+    </v-form>
 </template>
 
 <script>
 export default {
     data(){
         return {
+            validForm: false,
+
             // All the below fields are taken from here :
             // https://firebase.google.com/docs/reference/js/firebase.User
             dataCols:{
@@ -60,13 +63,23 @@ export default {
                     displayName: {
                         title: 'Display Name', 
                         value: (this.user.displayName) ? this.user.displayName : '',
-                        dirty: false
+                        dirty: false,
+                        required: true,
+                        rules:[
+                            v => !!v || 'Display Name is required',
+                            v => v.length > 6 || 'Display Name must be less than 6 characters'
+                        ]
                     },
                     email: {
                         title: 'Email', 
                         value: this.user.email,
                         dirty: false,
-                        readonly: true
+                        readonly: true,
+                        required: true,
+                        rules:[
+                            v => !!v || 'Email is required',
+                            v => /.+@.+/.test(v) || 'E-mail must be valid'
+                        ]
                     },
                     phoneNumber: {
                         title: 'Phone Number',
@@ -143,13 +156,21 @@ export default {
 
             if(Object.keys(newObj).length > 0){
                 this.UserObj.updateProfile(newObj).then(resp => {
+
+                    // Update user data
+                    this.$__firebase.firestore.collection('users').doc(this.UserObj.uid).update({
+                        newUser: false,
+                        lastUpdate: new Date().toISOString()
+                    });
+
+                    this.$emit('blockUpdate', 'StepProceed', true);
                     this.$store.commit('setSnackMsg', 'User updated');
                     this.$store.commit('setView');
                 }).catch(err => {
                     this.$store.commit('setSnackMsg', err.message);
                 });
             }
-        }
+        },
     },
     props:{
         user: {
