@@ -88,24 +88,26 @@ export default {
     methods:{
         // Get current user data document
         getData(){
-            let userId = this.currentUser.uid;
-            this.$__firebase.firestore.collection('users').doc(userId).get().then(doc => {
-                if(doc.exists){
-                    this.userData = doc.data();
-                    // Record the user last visit time
-                    if(!this.userData.hasOwnProperty('last_user_visit')){
-                        this.userData['last_user_visit'] = new Date().toISOString();
-                        this.userData['prev_last_user_visit'] = false;
-                    }else{
-                        // Store the last user visit time from current one
-                        let prevDate = this.userData['last_user_visit'];
-                        if(!this.userData.hasOwnProperty('prev_last_user_visit')) this.userData['prev_last_user_visit'] = prevDate;
-                        this.userData['last_user_visit'] = new Date().toISOString();
+            if(this.currentUser){
+                let userId = this.currentUser.uid;
+                this.$__firebase.firestore.collection('users').doc(userId).get().then(doc => {
+                    if(doc.exists){
+                        this.userData = doc.data();
+                        // Record the user last visit time
+                        if(!this.userData.hasOwnProperty('last_user_visit')){
+                            this.userData['last_user_visit'] = new Date().toISOString();
+                            this.userData['prev_last_user_visit'] = false;
+                        }else{
+                            // Store the last user visit time from current one
+                            let prevDate = this.userData['last_user_visit'];
+                            if(!this.userData.hasOwnProperty('prev_last_user_visit')) this.userData['prev_last_user_visit'] = prevDate;
+                            this.userData['last_user_visit'] = new Date().toISOString();
+                        }
                     }
-                }
-            }).catch(err => {
-                this.$store.commit('setSnackMsg', err.message);
-            });
+                }).catch(err => {
+                    this.$store.commit('setSnackMsg', err.message);
+                });
+            }
         },
 
         // Update user requested data
