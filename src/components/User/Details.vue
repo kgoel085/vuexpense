@@ -144,6 +144,7 @@ export default {
             if(Object.keys(newObj).length > 0){
                 this.UserObj.updateProfile(newObj).then(resp => {
                     this.$store.commit('setSnackMsg', 'User updated');
+                    this.$store.commit('setView');
                 }).catch(err => {
                     this.$store.commit('setSnackMsg', err.message);
                 });
