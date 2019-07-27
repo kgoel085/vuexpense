@@ -184,21 +184,18 @@ export default {
         // Create user document 
         createUser(user = false){
             if(user){
-
+                let vm = this;
                 // Create document for newly created user
                 this.$__firebase.firestore.collection('users').doc(user.uid).set({
-                    newUser: true,
-                    baseData: false
-
+                    newUser: false
                 }).then(resp => {
                     // Update user name
 
-                    let username = this.formData.username.value;
-                    this.$refs.loginForm.reset();
-                    this.disableBtn = false;
+                    let username = vm.formData.username.value;
+                    vm.disableBtn = false;
                     
                     return user.updateProfile({
-                        displayName: this.formData.username.value
+                        displayName: vm.formData.username.value
                     });
                 }).then(() => {
 
