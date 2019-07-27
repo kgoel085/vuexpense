@@ -1,5 +1,5 @@
 <template>
-    <v-form ref="loginForm" v-model="formData.valid">
+    <v-form ref="loginForm" name='loginForm' v-model="formData.valid">
         <v-container fluid>
             <v-layout row wrap>
                 <v-flex xs12>
@@ -227,7 +227,14 @@ export default {
         }
     },
     mounted(){
-        this.$refs.loginForm.reset();
+        let vm = this;
+        vm.$refs.loginForm.reset();
+
+        // Catch enter event for the login form
+        document.querySelector('form[name=loginForm]').addEventListener('keydown', function(e){
+            // Catch Enter event on the login form for user login
+            if(e.which == 13) vm.valdiate();
+        });
 
         // If signed / logged in redirect to home
         if(this.$store.state.firebase.user){
