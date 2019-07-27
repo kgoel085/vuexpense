@@ -5,19 +5,7 @@
                 <v-card flat tile class="grow">
                     <!-- User Profile -->
                     <v-card-title>
-                        <v-list-tile class="grow">
-                            <v-layout row wrap justify-start align-center>
-                                <v-list-tile-avatar color="grey darken-3" size="100">
-                                    <v-img class="elevation-6" :src="UserPhoto"></v-img>
-                                </v-list-tile-avatar>
-
-                                <v-list-tile-content class="px-4">
-                                    <v-list-tile-title class="font-weight-medium font-italic">
-                                        {{ ( UserObj.displayName ) ? UserObj.displayName : 'User' }}
-                                    </v-list-tile-title>
-                                </v-list-tile-content>
-                            </v-layout>
-                        </v-list-tile>
+                        <UserProfile></UserProfile>
                     </v-card-title>
 
                     <!-- User data fields -->
@@ -51,6 +39,8 @@
 </template>
 
 <script>
+import UserProfile from '@/components/User/Profile'
+
 export default {
     data(){
         return {
@@ -96,6 +86,9 @@ export default {
                 }
             }
         }
+    },
+    components:{
+        UserProfile
     },
     computed:{
         // Current user object
