@@ -53,7 +53,7 @@ export default {
             stepper:{
                 header: [
                     {title: 'Details', completed: false, component: 'UserDetails'},
-                    {title: 'Rules', completed: false, component: 'UserRules'}
+                    // {title: 'Rules', completed: false, component: 'UserRules'}
                 ]
             }
         }
