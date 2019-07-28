@@ -14,6 +14,7 @@ const firebase = {
         // Sets the current auth state of the user
         setUser(state, usr = false){
             state.user = usr;
+            if(usr.hasOwnProperty('photoURL')) state.defaultProfile = usr.photoURL;
         },
 
         // Sets the current state of the signed up user
