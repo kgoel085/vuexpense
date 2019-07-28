@@ -5,7 +5,7 @@
                 <v-card flat tile class="grow">
                     <!-- User Profile -->
                     <v-card-title>
-                        <UserProfile></UserProfile>
+                        <UserProfile @userProfileUpdated="setProfile"></UserProfile>
                     </v-card-title>
 
                     <!-- User data fields -->
@@ -21,7 +21,7 @@
                         </v-layout>
                         <v-layout row wap>
                             <v-flex xs4 v-for="(input, indx) in dataCols.input" :key="indx" class="pa-2">
-                                <v-text-field :label="input.title" focus :clearable="(!input.hasOwnProperty('readonly')) ? true : false" :readonly="(input.hasOwnProperty('readonly')) ? true : false" :placeholder="input.title" :required="(input.hasOwnProperty('required')) ? true : false" :rules="(input.hasOwnProperty('rules')) ? input.rules : []" v-model="input.value" @input="checkFields(indx)"></v-text-field>
+                                <v-text-field :label="input.title" focus :clearable="(!input.hasOwnProperty('readonly')) ? true : false" :readonly="(input.hasOwnProperty('readonly')) ? true : false" :placeholder="input.title" :required="(input.hasOwnProperty('required')) ? true : false" :rules="(input.hasOwnProperty('rules')) ? input.rules : []" v-model="input.value" @input="checkFields(indx)" v-if="!input.hasOwnProperty('display')"></v-text-field>
                             </v-flex>
                         </v-layout>
                     </v-card-text>
@@ -77,6 +77,11 @@ export default {
                         dirty: false,
                         readonly: true
                     },
+                    photoURL: {
+                        dirty: false,
+                        value: this.user.photoURL,
+                        display:false
+                    }
                 },
 
                 // Status data fields
@@ -164,6 +169,14 @@ export default {
                 });
             }
         },
+
+        // Set user profile image
+        setProfile(src){
+            if(src){
+                this.dataCols.input.photoURL.value = src;
+                this.checkFields('photoURL');
+            }
+        }
     },
     props:{
         user: {

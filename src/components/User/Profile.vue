@@ -3,22 +3,29 @@
         <v-flex xs12 v-if="UserObj">
             <v-list-tile class="grow">
                 <v-layout row wrap justify-start align-center >
-                    <v-list-tile-avatar color="grey darken-3" size="100" ref="dropArea" :class="{'dragBorder': dragged}">
-                        <v-img class="elevation-6" :src="UserPhoto"></v-img>
-                    </v-list-tile-avatar>
+                    <v-tooltip bottom>
+                        <template v-slot:activator="{ on }">
+                            <v-list-tile-avatar color="grey darken-3" size="100" v-on="on" ref="dropArea" :class="{'dragBorder': dragged}" @click="showFile">
+                                <v-img class="elevation-6" :src="UserPhoto"></v-img>
+                            </v-list-tile-avatar>
+                        </template>
+                        <span>Drag / Drop image for new profile picture</span>
+                    </v-tooltip>
 
+                    <v-slide-x-transition>
+                        <v-list-tile-avatar color="grey darken-3 mx-2" size="100" v-if="dragged && !draggedImg.error">
+                            <v-img class="elevation-6" :src="(draggedImg.src) ? draggedImg.src : UserPhoto"></v-img>
+                        </v-list-tile-avatar>
+                    </v-slide-x-transition>
+                    
                     <v-list-tile-content class="px-4">
-                        <v-slide-x-transition>
-                            <v-list-tile-content v-if="dragged">
-                                Image Dragged
-                            </v-list-tile-content>
-                        </v-slide-x-transition>
-                        
                         <v-list-tile-title class="font-weight-medium font-italic">
-                            {{ ( UserObj.displayName ) ? UserObj.displayName : 'User' }}
+                            <span>{{ ( UserObj.displayName ) ? UserObj.displayName : 'User' }}</span>
                         </v-list-tile-title>
+                        <small v-if="draggedImg.error" class="red--text">{{ draggedImg.error }}</small>
                     </v-list-tile-content>
                 </v-layout>
+                <input type="file" id="fileElem" accept="image/*" style="display: none">
             </v-list-tile>
         </v-flex>
         <loader v-else></loader>
@@ -33,7 +40,11 @@ export default {
         return {
             // Drag / Drop events
             dropEvents: ['dragenter', 'dragover', 'dragleave', 'drop'],
-            dragged: false
+            dragged: false,
+            draggedImg:{
+                src: null,
+                error: false
+            }
         }
     },
     computed:{
@@ -46,6 +57,20 @@ export default {
         UserPhoto(){
             return (this.UserObj.hasOwnProperty('photoURL') && this.UserObj.photoURL) ? this.UserObj.photoURL : this.$store.state.firebase.defaultProfile;
         },
+    },
+    watch:{
+        'draggedImg.error'(val){
+            if(val){
+                this.draggedImg.src = false;
+                this.dragged = false
+            }
+        },
+        dragged(val){
+            if(val){
+                this.draggedImg.src = false;
+                this.draggedImg.error = false;
+            }
+        }
     },
     methods:{
         // Bind the required events for drag / drop area
@@ -69,11 +94,11 @@ export default {
 
             switch(eType){
                 case 'dragenter':
-                    if(!this.dragged) this.dragged = true;
+                    
                 break;
 
                 case 'dragover':
-
+                    if(!this.dragged) this.dragged = true;
                 break;
 
                 case 'dragleave':
@@ -81,9 +106,55 @@ export default {
                 break;
 
                 case 'drop':
-                    if(this.dragged) this.dragged = false;
+                    // if(this.dragged) this.dragged = false;
+                    this.handleFiles(event);
                 break;
             }
+        },
+
+        // Handles the dropped file
+        handleFiles(e){
+            this.draggedImg.error = false;
+
+            let file = false;
+
+            if(e.hasOwnProperty('dataTransfer')){
+                let dt = e.dataTransfer
+                [file] = dt.files
+            }else{
+                this.dragged = true;
+                file = e[0]
+            }
+
+            // Check if actual file is dropped or not
+            if(!file){
+                this.draggedImg.error = 'Invalid file dropped.';
+            }
+
+            // Check whether file is correct format or not
+            let fileType = file.type;
+            if(!fileType || fileType.toLowerCase().indexOf('image')){
+                this.draggedImg.error = 'Invalid file format !';
+            }
+
+            // If any error is there, return false;
+            if(this.draggedImg.error) return false; 
+
+            // Load file src as string
+            let fileObj = new FileReader();
+            fileObj.readAsDataURL(file);
+
+            // Set file src on load 
+            fileObj.onloadend = () => {
+                this.draggedImg.error = false;
+                this.draggedImg.src = fileObj.result;
+                this.$emit('userProfileUpdated' , fileObj.result);
+            }
+        },
+
+        showFile(){
+            let fileElem = document.querySelector('#fileElem');
+            if(fileElem) fileElem.click();
         }
     },
     components:{
@@ -91,13 +162,15 @@ export default {
     },
     mounted(){
         if(this.UserObj) this.bindEvents();
+
+        let vm = this;
+        document.querySelector('#fileElem').addEventListener('change', function(event){
+            vm.handleFiles(document.querySelector('#fileElem').files);
+        });
     }
 }
 </script>
 
 <style scoped>
-    .dragBorder{
-        border: 5px dashed blueviolet;
-        border-radius: 100%
-    }
+    
 </style>
