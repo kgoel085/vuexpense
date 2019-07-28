@@ -231,10 +231,13 @@ export default {
         vm.$refs.loginForm.reset();
 
         // Catch enter event for the login form
-        document.querySelector('form[name=loginForm]').addEventListener('keydown', function(e){
-            // Catch Enter event on the login form for user login
-            if(e.which == 13) vm.valdiate();
-        });
+        let formElem = document.querySelector('form[name=loginForm]');
+        if(formElem){
+            document.querySelector('form[name=loginForm]').addEventListener('keydown', function(e){
+                // Catch Enter event on the login form for user login
+                if(e.which == 13) vm.valdiate();
+            });
+        }
 
         // If signed / logged in redirect to home
         if(this.$store.state.firebase.user){
