@@ -82,7 +82,7 @@
 			// Get the current date data
 			getData(){
 				let [year, month, date] = this.expenseDate.split('-');
-				let expenseDoc = this.expenseDoc.collection('data').where('year', '==', year).where('month', '==', month).where('date', '==', date)
+				let expenseDoc = this.expenseDoc.collection('data').where('year', '==', parseInt(year)).where('month', '==', parseInt(month)).where('date', '==', parseInt(date))
 				expenseDoc.get().then(snapShot => {
 					snapShot.forEach(doc => {
 						if(doc.exists){
