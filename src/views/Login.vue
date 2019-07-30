@@ -1,5 +1,5 @@
 <template>
-    <v-form ref="loginForm" v-model="formData.valid">
+    <v-form ref="loginForm" name='loginForm' v-model="formData.valid">
         <v-container fluid>
             <v-layout row wrap>
                 <v-flex xs12>
@@ -9,8 +9,8 @@
         </v-container>
         <v-container>
             <v-layout row wrap>
-                <v-flex xs12>
-                    <!-- <v-text-field autofocus label="Username" v-model="formData.username.value" :counter="10" :rules="formData.username.rules"></v-text-field> -->
+                <v-flex xs12 v-if="!loginPg" >
+                    <v-text-field autofocus label="Username" v-model="formData.username.value" :rules="formData.username.rules"></v-text-field>
                 </v-flex>
                 <v-flex xs12>
                     <v-text-field label="Email" v-model="formData.email.value" :rules="formData.email.rules"></v-text-field>
@@ -29,8 +29,8 @@
                     </v-layout>
                 </v-flex>
                 <v-flex xs12 class="text-xs-center">
-                    <v-btn flat @click="valdiate" class="secondary" :disabled="!formData.valid">{{ title }}</v-btn>
-                    <v-btn flat :to="btnUrl" class="secondary">{{ btnTitle }}</v-btn>
+                    <v-btn flat @click="valdiate" class="secondary" :disabled="!formData.valid || disableBtn">{{ title }}</v-btn>
+                    <v-btn flat :to="btnUrl" class="secondary" :disabled="disableBtn" v-if="!$store.state.firebase.newUser">{{ btnTitle }}</v-btn>
                 </v-flex>
             </v-layout>
         </v-container>
@@ -44,7 +44,7 @@
             <v-btn
                 dark
                 flat
-                @click="snackbar.show = false; snackbar.msg = null; snackbar.color = 'error' "
+                @click="snackbar.show = false; snackbar.msg = null; snackbar.color = 'error';"
             >
                 Close
             </v-btn>
@@ -66,13 +66,16 @@ export default {
                 color: 'error'
             },
 
+            // Disable btn
+            disableBtn: false,
+
             // Form validation rules
             formData:{
                 username: {
                     value: null, 
                     rules:[
                         v => !!v || 'Name is required',
-                        v => (v && v.length <= 10) || 'Name must be less than 10 characters'
+                        v => (v && v.length >= 6) || 'Name must be greater than 6 characters'
                     ]
                 },
                 email: {
@@ -141,35 +144,73 @@ export default {
             return false;
         },
         
-        // Logs user in
+        // Logs / signs user in
         manageUser(email, pass){
+
+            // Disable both buttons
+            this.disableBtn = true;
+
             // Set required function to be called
             let auth = (this.loginPg) ? 'signInWithEmailAndPassword' : 'createUserWithEmailAndPassword';
+
             this.$__firebase.fireauth[auth](email, pass).then(resp => {
-                this.$refs.loginForm.reset();
-
-                let routeName = 'home';
-
+                
                 // If page is not login
                 if(!this.loginPg){
-                    routeName = 'login';
-
-                    // Sign out new user , default working of firebase
-                    this.$__firebase.fireauth.signOut();
+                    
+                    // Create user collection entry
+                    this.createUser(resp.user);
+                    
                 }else{
+                    // For logged in user
                     if(resp.hasOwnProperty('user')){
                         this.$store.commit('setUser', resp.user);
-                    }
-                }
+                        //this.$store.commit('setNewUser', false);
 
-                if(routeName == 'home') this.$store.commit('setSnackMsg', 'User logged in successfully.');
-                // Push to the decided page / route
-                this.$router.push({name: routeName});
+                        this.$store.commit('setSnackMsg', 'User logged in successfully.');
+                    }
+                    
+                    this.$router.push({name: 'home'});
+                }
+                
             }).catch(err => {
+                this.disableBtn = false;
                 this.snackbar.msg = err.message;
                 this.snackbar.show = true;
             });
             
+        },
+
+        // Create user document 
+        createUser(user = false){
+            if(user){
+                let vm = this;
+                // Create document for newly created user
+                this.$__firebase.firestore.collection('users').doc(user.uid).set({
+                    newUser: false
+                }).then(resp => {
+                    // Update user name
+
+                    let username = vm.formData.username.value;
+                    vm.disableBtn = false;
+                    
+                    return user.updateProfile({
+                        displayName: vm.formData.username.value
+                    });
+                }).then(() => {
+
+                    // Sign out new user , default working of firebase
+                    this.$store.commit('setNewUser', `Sign Up successfull.`);
+                    this.$__firebase.fireauth.signOut();
+                
+                }).catch(err => {
+                    this.disableBtn = false;
+
+                    this.snackbar.msg = err.message;
+                    this.snackbar.show = true;
+
+                });
+            }
         }
     },
     props:{
@@ -186,14 +227,26 @@ export default {
         }
     },
     mounted(){
+        let vm = this;
+        vm.$refs.loginForm.reset();
+
+        // Catch enter event for the login form
+        let formElem = document.querySelector('form[name=loginForm]');
+        if(formElem){
+            document.querySelector('form[name=loginForm]').addEventListener('keydown', function(e){
+                // Catch Enter event on the login form for user login
+                if(e.which == 13) vm.valdiate();
+            });
+        }
+
         // If signed / logged in redirect to home
         if(this.$store.state.firebase.user){
             this.$router.push({name: 'home'});
         }
 
         // Show msg if set any
-        if(this.msg){
-            this.snackbar.msg = this.msg;
+        if(this.msg || this.$store.state.firebase.newUser){
+            this.snackbar.msg = (this.msg || this.$store.state.firebase.newUser);
             this.snackbar.color = "info";
             this.snackbar.show = true;
         }

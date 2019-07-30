@@ -2,6 +2,7 @@
 const global = {
     state: { 
         showNav: true,
+        updateView: true,
         snackbar:{
             show:false,
             msg: null
@@ -17,6 +18,11 @@ const global = {
         setSnackMsg(state, val = null){
             state.snackbar.msg = val;
             state.snackbar.show = (val) ? true : false;
+        },
+
+        // Update the main view
+        setView(state, val = true){
+            state.updateView = Math.random();
         }
     },
     actions: {

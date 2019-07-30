@@ -25,6 +25,9 @@ fBase.fireauth.onAuthStateChanged(usr => {
   // Update current user status
   store.commit('setUser', usr);
 
+  // Update the main view, when user is updated
+  store.commit('setView');
+
   // If current user is no longer present
   if(!usr){
     let routeObj = {name: 'login'};
