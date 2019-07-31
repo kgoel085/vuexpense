@@ -1,6 +1,6 @@
 <template>
     <v-flex xs12 class="py-2">
-        <v-form v-model="formValid">
+        <v-form v-model="formValid" ref="addForm" name="addForm">
             <v-layout row wrap>
                 <v-flex class="grow pa-1" v-for="(field, indx) in addFields" :key="indx">
                     <template v-if="field.hasOwnProperty('input')">
@@ -9,6 +9,7 @@
                             :label="field.display"
                             :type="field.type"
                             :rules="field.rules"
+                            :disable="disableFields"
                         ></v-text-field>
                     </template>
                     <template v-if="field.hasOwnProperty('select')">
@@ -17,11 +18,12 @@
                             v-model="field.value"
                             :label="field.display"
                             :rules="field.rules"
+                            :disable="disableFields"
                         ></v-select>
                     </template>
                 </v-flex>
                 <v-flex class="shrink">
-                    <v-btn flat class="primary" @click="checkData" :disabled="!formValid">Add</v-btn>
+                    <v-btn flat class="primary" @click="checkData" :disabled="!formValid || disableFields">Add</v-btn>
                 </v-flex>
             </v-layout>
         </v-form>
@@ -34,22 +36,22 @@ export default {
         return {
             addFields:{
                 title:{
-                    value: '',
+                    value: null,
                     display: 'Title',
                     input: true,
                     type: 'text',
                     rules:[
                         v => !!v || 'Title is required',
-                        v => v.length >= 3  || 'Name must be greater than equal to 3 characters'
+                        v => v && v.length >= 3  || 'Name must be greater than equal to 3 characters'
                     ]
                 },
                 value:{
-                    value: '',
+                    value: null,
                     display: 'Value',
                     input: true,
                     type: 'number',
                     rules:[
-                        v => !!v || 'Value is required',
+                        v => !!v || 'Value is required and must be a number',
                         v => parseInt(v) && v > 0  || 'Value must be a valid number or greater than zero'
                     ]
                 },
@@ -63,7 +65,14 @@ export default {
                     ]
                 }
             },
-            formValid: false
+            formValid: false,
+            disableFields: false
+        }
+    },
+    watch:{
+        // Communicate current field state with parent
+        disableFields(val){
+            this.$emit('disableFields', val);
         }
     },
     computed:{
@@ -89,6 +98,8 @@ export default {
     methods:{
         // Check data
         checkData(){
+            this.disableFields = true;
+
             // Create ref. to data collection
             let expenseCollection = this.expenseDoc.collection('data');
 
@@ -100,13 +111,14 @@ export default {
             expenseCollection.where('title', '==', this.addFields.title.value).get().then(doc => {  
                 // Add data to document if not exists
                 if(!doc.exists) this.addData();
+                else this.disableFields = false;
             });
         },
 
         // Add data to the document
         addData(){
             let objVal = {};
-
+            
             // Process all the field values
             Object.keys(this.addFields).forEach(key => {
                 let obj = this.addFields[key];
@@ -127,10 +139,14 @@ export default {
 
                     // Add data to the ref. collection
                     expenseCollection.add(objVal).then(resp => {
-                        this.$emit('RecordUpdated', this.expenseDate);
+                        // this.$refs.addForm.resetValidation();
+                        this.$refs.addForm.reset();
                         this.$store.commit('setSnackMsg', 'Item added');
+
+                        this.disableFields = false;
                     }).catch(err => {
                         this.$store.commit('setSnackMsg', err.message);
+                        this.disableFields = false;
                     });
                 }
             }
