@@ -89,11 +89,15 @@ export default {
     methods:{
         // Check data
         checkData(){
-            let [year, month, date] = this.expenseDate.split('-');
-
+            // Create ref. to data collection
             let expenseCollection = this.expenseDoc.collection('data');
-            expenseCollection.where('year', '==', parseInt(year)).where('month', '==', parseInt(month)).where('date', '==', parseInt(date)).where('title', '==', this.addFields.title.value).get().then(doc => {
-                
+
+            // Apply filter
+            let dtArr = ['year', 'month', 'date'];
+            this.expenseDate.split('-').forEach((key, indx) => expenseCollection = expenseCollection.where(dtArr[indx], '==', parseInt(key)));
+
+            // Apply title filter
+            expenseCollection.where('title', '==', this.addFields.title.value).get().then(doc => {  
                 // Add data to document if not exists
                 if(!doc.exists) this.addData();
             });
@@ -103,11 +107,13 @@ export default {
         addData(){
             let objVal = {};
 
+            // Process all the field values
             Object.keys(this.addFields).forEach(key => {
                 let obj = this.addFields[key];
-                if(obj.value) objVal[key] = obj.value
+                if(obj.value) objVal[key] = (parseInt(obj.value)) ? parseInt(obj.value) : obj.value.toLowerCase();
             });
 
+            // If any value is there
             if(Object.keys(objVal).length > 0 && this.expenseDate){
                 let [year, month, date] = this.expenseDate.split('-');
 
@@ -116,8 +122,12 @@ export default {
                 if(date) objVal['date'] = parseInt(date);
 
                 if(Object.keys(objVal).length > 0){
+                    // Create ref. to data collection
                     let expenseCollection = this.expenseDoc.collection('data');
+
+                    // Add data to the ref. collection
                     expenseCollection.add(objVal).then(resp => {
+                        this.$emit('RecordUpdated', this.expenseDate);
                         this.$store.commit('setSnackMsg', 'Item added');
                     }).catch(err => {
                         this.$store.commit('setSnackMsg', err.message);
