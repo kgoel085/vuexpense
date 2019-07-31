@@ -3,7 +3,7 @@
 		<v-layout row wrap>
 			<!-- Fetch expense data for specific date -->
 			<v-flex xs12 md3 class="pa-1">
-				<v-date-picker v-model="expenseDate" full-width class="mt-3"></v-date-picker>
+				<v-date-picker v-model="expenseDate" :reactive="true" full-width class="mt-3" :disabled="disableCalender"></v-date-picker>
 			</v-flex>
 
 			<v-flex xs12 md9 class="pa-1">
@@ -17,7 +17,7 @@
 						<v-card flat>
 							<v-layout row wrap>
 								<!-- Add Data -->
-								<expense :date="expenseDate" @RecordUpdated="getData(true)"></expense>
+								<expense :date="expenseDate" @disableFields="disableCalender = !disableCalender"></expense>
 
 								<!-- Show fetched data -->
 								<v-slide-x-transition>
@@ -111,7 +111,10 @@
 				panel: [],
 
 				// make expansion panels extended / collapsed
-				expandPanel: false
+				expandPanel: false,
+
+				// Calender is disabled or not
+				disableCalender: false
 			}
 		},
 		watch:{
@@ -173,6 +176,9 @@
 					obj.data = [];
 					obj.total = 0;
 				});
+
+				// Bind update method again
+				this.updateData();
 			},
 
 			// Get the current date data
@@ -183,8 +189,11 @@
 				this.expenseDoc.get().then(snapShot => {
 					snapShot.forEach(doc => {
 						if(doc.exists){
+							// Extract data
 							let data = doc.data();
-							data['id'] = doc.id;
+							if(doc.id) data['id'] = doc.id;
+
+							// Add data to interface
 							this.createData(data);
 						}
 					});
@@ -200,18 +209,41 @@
 					if(obj.hasOwnProperty('type') && this.userData.hasOwnProperty(obj.type)){
 
 						let mainObj = this.userData[obj.type];
-						if(obj.hasOwnProperty('value') && obj.value){
 
+						// Search whether same doc id already exist or not
+						const found = mainObj.data.some(el => el.id == obj.id);
+
+						if(!found && obj.hasOwnProperty('value') && obj.value){
 							// Collect all the value in their resp. collections
 							mainObj.total += parseInt(obj.value);
 							mainObj.data.push(obj);
 						}
 					}
 				}
+			},
+			
+			// Listen for real time updates
+			updateData(){
+				this.expenseDoc.onSnapshot(snapshot => {
+					snapshot.forEach(doc => {
+						// Extract data
+						let data = doc.data();
+						if(doc.id) data['id'] = doc.id;
+						
+						// Add data to interface
+						this.createData(data);
+					});
+				}, function(err) {
+					this.$store.commit('setSnackMsg', err.message)
+				});
 			}
 		},
 		mounted(){
+			// Get actual data
 			this.getData();
+
+			// Listen for real time updates
+			this.updateData();
 		}
 		
 	}
