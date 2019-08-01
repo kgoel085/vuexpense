@@ -5,9 +5,9 @@
                 <v-expansion-panel v-model="panel" focusable expand>
                     <v-expansion-panel-content>
                         <template v-slot:header>
-                            <h3 class="secondary--text" :key="currentPoint">Add Data</h3>
+                            <h3 class="secondary--text">Add Data</h3>
                         </template>
-                        <v-card flat class="grow pa-1">
+                        <v-card flat class="grow pa-1" >
                             <v-layout row wrap>
                                 <v-flex class="grow pa-1" v-for="(field, indx) in addFields" :key="indx">
                                     <template v-if="field.hasOwnProperty('input')">
@@ -106,16 +106,6 @@ export default {
         // Expense date
         expenseDate(){
             return this.date
-        },
-
-        // Check the current break point
-        currentPoint(){
-            const val = this.$vuetify.breakpoint.smAndDown;
-
-            if(val) this.panel = null;
-            else this.panel = 0;
-
-            return val;
         }
     },
     methods:{
