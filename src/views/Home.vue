@@ -36,7 +36,7 @@
 														</v-flex>
 													</v-layout>
 												</template>
-												<v-alert :value="true" type="info" v-if="type.data.length == 0"> No expense data found </v-alert>
+												<v-alert :value="true" type="info" v-if="type.data.length == 0" class="ma-2"> No expense data found </v-alert>
 												<v-card v-else>
 													<v-list-tile v-for="(data,indx) in type.data" :key="indx">
 														<v-list-tile-content>
