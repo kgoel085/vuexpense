@@ -7,7 +7,7 @@
 		<v-spacer></v-spacer>
 
 		<!-- Navigation Links -->
-		<v-btn flat class="secondary" dark to="/home">Home</v-btn>
+		<v-btn flat class="secondary" dark :to="item.to" v-for="(item, indx) in menuItems" :key="indx">{{ item.title }}</v-btn>
 		
 		<!-- User is logged in -->
 		<template v-if="$store.state.firebase.user">
@@ -61,7 +61,11 @@
 export default {
     data(){
         return {
-            menu: false
+			menu: false,
+			menuItems:[
+				{title: 'Home', to: '/home'},
+				{title: 'Feature Request', to: '/suggest'},
+			]
         }
     },
     computed:{
