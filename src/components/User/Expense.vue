@@ -31,6 +31,7 @@
                                 </v-flex>
                                 <v-flex xs12 class="text-xs-center">
                                     <v-btn flat class="primary" @click="checkData" :disabled="!formValid || disableFields">Add</v-btn>
+                                    <v-btn flat class="primary" @click="$refs.addForm.reset()">Reset</v-btn>
                                 </v-flex>
                             </v-layout>
                         </v-card>
