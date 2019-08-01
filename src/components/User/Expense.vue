@@ -2,6 +2,9 @@
     <v-flex xs12 class="py-2">
         <v-form v-model="formValid" ref="addForm" name="addForm">
             <v-layout row wrap>
+                <v-flex xs12 class="py-2">
+                    <h3>Add Data</h3>
+                </v-flex>
                 <v-flex class="grow pa-1" v-for="(field, indx) in addFields" :key="indx">
                     <template v-if="field.hasOwnProperty('input')">
                         <v-text-field
@@ -22,7 +25,7 @@
                         ></v-select>
                     </template>
                 </v-flex>
-                <v-flex class="shrink">
+                <v-flex xs12 class="text-xs-center">
                     <v-btn flat class="primary" @click="checkData" :disabled="!formValid || disableFields">Add</v-btn>
                 </v-flex>
             </v-layout>

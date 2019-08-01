@@ -4,6 +4,8 @@
 			<!-- Fetch expense data for specific date -->
 			<v-flex xs12 md3 class="pa-1">
 				<v-date-picker v-model="expenseDate" :reactive="true" full-width class="mt-3" :disabled="disableCalender"></v-date-picker>
+				<!-- Add Data -->
+				<expense :date="expenseDate" @disableFields="disableCalender = !disableCalender"></expense>
 			</v-flex>
 
 			<v-flex xs12 md9 class="pa-1">
@@ -16,9 +18,6 @@
 					<v-tab-item key="showData">
 						<v-card flat>
 							<v-layout row wrap>
-								<!-- Add Data -->
-								<expense :date="expenseDate" @disableFields="disableCalender = !disableCalender"></expense>
-
 								<!-- Show fetched data -->
 								<v-slide-x-transition>
 									<v-flex xs12 v-if="!loadingData && (userData.debit.data.length > 0 || userData.credit.data.length > 0)">
