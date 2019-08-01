@@ -7,7 +7,20 @@
 		<v-spacer></v-spacer>
 
 		<!-- Navigation Links -->
-		<v-btn flat class="secondary" dark :to="item.to" v-for="(item, indx) in menuItems" :key="indx">{{ item.title }}</v-btn>
+		<v-btn flat class="secondary hidden-sm-and-down" dark :to="item.to" v-for="(item, indx) in menuItems" :key="indx">{{ item.title }}</v-btn>
+
+		<!-- Mobile Navigation links -->
+		<v-menu class="hidden-md-and-up">
+			<v-toolbar-side-icon slot="activator"></v-toolbar-side-icon>
+			<v-list>
+			<v-list-tile v-for="(item, indx) in menuItems" :key="indx">
+				<v-list-tile-content>
+					<v-btn flat block light :to="item.to">{{ item.title }}</v-btn>
+				</v-list-tile-content>
+			</v-list-tile>   
+			</v-list>
+		</v-menu>
+		
 		
 		<!-- User is logged in -->
 		<template v-if="$store.state.firebase.user">
