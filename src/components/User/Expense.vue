@@ -2,32 +2,40 @@
     <v-flex xs12 class="py-2">
         <v-form v-model="formValid" ref="addForm" name="addForm">
             <v-layout row wrap>
-                <v-flex xs12 class="py-2">
-                    <h3>Add Data</h3>
-                </v-flex>
-                <v-flex class="grow pa-1" v-for="(field, indx) in addFields" :key="indx">
-                    <template v-if="field.hasOwnProperty('input')">
-                        <v-text-field
-                            v-model="field.value"
-                            :label="field.display"
-                            :type="field.type"
-                            :rules="field.rules"
-                            :disable="disableFields"
-                        ></v-text-field>
-                    </template>
-                    <template v-if="field.hasOwnProperty('select')">
-                        <v-select
-                            :items="field.options"
-                            v-model="field.value"
-                            :label="field.display"
-                            :rules="field.rules"
-                            :disable="disableFields"
-                        ></v-select>
-                    </template>
-                </v-flex>
-                <v-flex xs12 class="text-xs-center">
-                    <v-btn flat class="primary" @click="checkData" :disabled="!formValid || disableFields">Add</v-btn>
-                </v-flex>
+                <v-expansion-panel v-model="panel">
+                    <v-expansion-panel-content>
+                        <template v-slot:header>
+                            <h3 class="secondary--text" :key="currentPoint">Add Data</h3>
+                        </template>
+                        <v-card flat class="grow pa-1">
+                            <v-layout row wrap>
+                                <v-flex class="grow pa-1" v-for="(field, indx) in addFields" :key="indx">
+                                    <template v-if="field.hasOwnProperty('input')">
+                                        <v-text-field
+                                            v-model="field.value"
+                                            :label="field.display"
+                                            :type="field.type"
+                                            :rules="field.rules"
+                                            :disable="disableFields"
+                                        ></v-text-field>
+                                    </template>
+                                    <template v-if="field.hasOwnProperty('select')">
+                                        <v-select
+                                            :items="field.options"
+                                            v-model="field.value"
+                                            :label="field.display"
+                                            :rules="field.rules"
+                                            :disable="disableFields"
+                                        ></v-select>
+                                    </template>
+                                </v-flex>
+                                <v-flex xs12 class="text-xs-center">
+                                    <v-btn flat class="primary" @click="checkData" :disabled="!formValid || disableFields">Add</v-btn>
+                                </v-flex>
+                            </v-layout>
+                        </v-card>
+                    </v-expansion-panel-content>
+                </v-expansion-panel>
             </v-layout>
         </v-form>
     </v-flex>
@@ -69,7 +77,8 @@ export default {
                 }
             },
             formValid: false,
-            disableFields: false
+            disableFields: false,
+            panel: null
         }
     },
     watch:{
@@ -96,6 +105,16 @@ export default {
         // Expense date
         expenseDate(){
             return this.date
+        },
+
+        // Check the current break point
+        currentPoint(){
+            const val = this.$vuetify.breakpoint.smAndDown;
+
+            if(val) this.panel = null;
+            else this.panel = 0;
+
+            return val;
         }
     },
     methods:{
