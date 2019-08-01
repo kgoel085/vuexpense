@@ -6,11 +6,14 @@
 		</v-toolbar-title>
 		<v-spacer></v-spacer>
 
+		<!-- Navigation Links -->
+		<v-btn flat class="secondary" dark to="/home">Home</v-btn>
+		
 		<!-- User is logged in -->
 		<template v-if="$store.state.firebase.user">
 			<v-menu v-model="menu" :close-on-content-click="false" :nudge-width="200" offset-x>
 				<template v-slot:activator="{ on }">
-					<v-btn color="secondary" dark v-on="on" >
+					<v-btn flat class="secondary" dark v-on="on" >
 						{{ userInfo.displayName }}
 					</v-btn>
 				</template>

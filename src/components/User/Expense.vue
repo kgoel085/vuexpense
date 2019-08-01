@@ -1,7 +1,10 @@
 <template>
     <v-flex xs12 class="py-2">
-        <v-form v-model="formValid">
+        <v-form v-model="formValid" ref="addForm" name="addForm">
             <v-layout row wrap>
+                <v-flex xs12 class="py-2">
+                    <h3>Add Data</h3>
+                </v-flex>
                 <v-flex class="grow pa-1" v-for="(field, indx) in addFields" :key="indx">
                     <template v-if="field.hasOwnProperty('input')">
                         <v-text-field
@@ -9,6 +12,7 @@
                             :label="field.display"
                             :type="field.type"
                             :rules="field.rules"
+                            :disable="disableFields"
                         ></v-text-field>
                     </template>
                     <template v-if="field.hasOwnProperty('select')">
@@ -17,11 +21,12 @@
                             v-model="field.value"
                             :label="field.display"
                             :rules="field.rules"
+                            :disable="disableFields"
                         ></v-select>
                     </template>
                 </v-flex>
-                <v-flex class="shrink">
-                    <v-btn flat class="primary" @click="checkData" :disabled="!formValid">Add</v-btn>
+                <v-flex xs12 class="text-xs-center">
+                    <v-btn flat class="primary" @click="checkData" :disabled="!formValid || disableFields">Add</v-btn>
                 </v-flex>
             </v-layout>
         </v-form>
@@ -34,22 +39,22 @@ export default {
         return {
             addFields:{
                 title:{
-                    value: '',
+                    value: null,
                     display: 'Title',
                     input: true,
                     type: 'text',
                     rules:[
                         v => !!v || 'Title is required',
-                        v => v.length >= 3  || 'Name must be greater than equal to 3 characters'
+                        v => v && v.length >= 3  || 'Name must be greater than equal to 3 characters'
                     ]
                 },
                 value:{
-                    value: '',
+                    value: null,
                     display: 'Value',
                     input: true,
                     type: 'number',
                     rules:[
-                        v => !!v || 'Value is required',
+                        v => !!v || 'Value is required and must be a number',
                         v => parseInt(v) && v > 0  || 'Value must be a valid number or greater than zero'
                     ]
                 },
@@ -63,7 +68,14 @@ export default {
                     ]
                 }
             },
-            formValid: false
+            formValid: false,
+            disableFields: false
+        }
+    },
+    watch:{
+        // Communicate current field state with parent
+        disableFields(val){
+            this.$emit('disableFields', val);
         }
     },
     computed:{
@@ -89,25 +101,34 @@ export default {
     methods:{
         // Check data
         checkData(){
-            let [year, month, date] = this.expenseDate.split('-');
+            this.disableFields = true;
 
+            // Create ref. to data collection
             let expenseCollection = this.expenseDoc.collection('data');
-            expenseCollection.where('year', '==', parseInt(year)).where('month', '==', parseInt(month)).where('date', '==', parseInt(date)).where('title', '==', this.addFields.title.value).get().then(doc => {
-                
+
+            // Apply filter
+            let dtArr = ['year', 'month', 'date'];
+            this.expenseDate.split('-').forEach((key, indx) => expenseCollection = expenseCollection.where(dtArr[indx], '==', parseInt(key)));
+
+            // Apply title filter
+            expenseCollection.where('title', '==', this.addFields.title.value).get().then(doc => {  
                 // Add data to document if not exists
                 if(!doc.exists) this.addData();
+                else this.disableFields = false;
             });
         },
 
         // Add data to the document
         addData(){
             let objVal = {};
-
+            
+            // Process all the field values
             Object.keys(this.addFields).forEach(key => {
                 let obj = this.addFields[key];
-                if(obj.value) objVal[key] = obj.value
+                if(obj.value) objVal[key] = (parseInt(obj.value)) ? parseInt(obj.value) : obj.value.toLowerCase();
             });
 
+            // If any value is there
             if(Object.keys(objVal).length > 0 && this.expenseDate){
                 let [year, month, date] = this.expenseDate.split('-');
 
@@ -116,11 +137,19 @@ export default {
                 if(date) objVal['date'] = parseInt(date);
 
                 if(Object.keys(objVal).length > 0){
+                    // Create ref. to data collection
                     let expenseCollection = this.expenseDoc.collection('data');
+
+                    // Add data to the ref. collection
                     expenseCollection.add(objVal).then(resp => {
+                        // this.$refs.addForm.resetValidation();
+                        this.$refs.addForm.reset();
                         this.$store.commit('setSnackMsg', 'Item added');
+
+                        this.disableFields = false;
                     }).catch(err => {
                         this.$store.commit('setSnackMsg', err.message);
+                        this.disableFields = false;
                     });
                 }
             }
