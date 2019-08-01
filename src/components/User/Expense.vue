@@ -2,7 +2,7 @@
     <v-flex xs12 class="py-2">
         <v-form v-model="formValid" ref="addForm" name="addForm">
             <v-layout row wrap>
-                <v-expansion-panel v-model="panel">
+                <v-expansion-panel v-model="panel" focusable expand>
                     <v-expansion-panel-content>
                         <template v-slot:header>
                             <h3 class="secondary--text" :key="currentPoint">Add Data</h3>
