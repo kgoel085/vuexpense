@@ -5,7 +5,7 @@
 			<v-flex xs12 md3 class="pa-1">
 				<v-date-picker v-model="expenseDate" :reactive="true" full-width class="mt-3" :disabled="disableCalender"></v-date-picker>
 				<!-- Add Data -->
-				<expense :date="expenseDate" @disableFields="disableCalender = !disableCalender"></expense>
+				<expense :date="expenseDate" @disableFields="disableCalender = !disableCalender" :updateObj="rowUpdate" @resetUpdate="rowUpdate = {}"></expense>
 			</v-flex>
 
 			<v-flex xs12 md9 class="pa-1">
@@ -24,7 +24,7 @@
 										<div class="d-flex justify-between align-center mb-3">
 											<v-btn @click="expandPanel = !expandPanel">{{ (expandPanel) ? 'Collapse' : 'Expand' }}</v-btn>
 										</div>
-										<v-expansion-panel v-model="panel" expand popout focusable>
+										<v-expansion-panel v-model="panel" expand popout focusable :key="$store.state.global.updateView">
 											<v-expansion-panel-content v-for="(type, indx) in userData" :key="indx">
 												<template v-slot:header>
 													<v-layout row wrap class="text-capitalize">
@@ -40,11 +40,13 @@
 												<v-card v-else>
 													<v-list-tile v-for="(data,indx) in type.data" :key="indx">
 														<v-list-tile-content>
-															<v-list-tile-title>{{ data.title }}</v-list-tile-title>
+															<v-list-tile-title>
+																{{ data.title }} 
+															</v-list-tile-title>
 														</v-list-tile-content>
 
 														<v-list-tile-action>
-															<span>{{ data.value }}</span>
+															<span>{{ data.value }} <v-btn small icon class="pa-2 ma-2" @click="rowUpdate = data"><v-icon size="20" class="px-2">edit</v-icon></v-btn></span>
 														</v-list-tile-action>
 													</v-list-tile>
 												</v-card>
@@ -113,7 +115,10 @@
 				expandPanel: false,
 
 				// Calender is disabled or not
-				disableCalender: false
+				disableCalender: false,
+
+				// Stores the data of row to be updated
+				rowUpdate:{}
 			}
 		},
 		watch:{
@@ -176,12 +181,16 @@
 					obj.total = 0;
 				});
 
+				// Reset update object
+				this.rowUpdate = {};
+
 				// Bind update method again
 				this.updateData();
 			},
 
 			// Get the current date data
 			getData(refresh = false){
+				if(!this.expenseDoc) return false;
 				if(refresh === true) this.resetData();
 
 				// Get data
@@ -212,10 +221,17 @@
 						// Search whether same doc id already exist or not
 						const found = mainObj.data.some(el => el.id == obj.id);
 
-						if(!found && obj.hasOwnProperty('value') && obj.value){
+						if(obj.hasOwnProperty('value') && obj.value){
 							// Collect all the value in their resp. collections
-							mainObj.total += parseInt(obj.value);
-							mainObj.data.push(obj);
+							if(!found){
+								mainObj.total += parseInt(obj.value);
+								mainObj.data.push(obj);
+							}else{
+								// Update the previous records
+								Object.keys(obj).forEach(key => {
+									if(mainObj.hasOwnProperty(key) && obj[key] != mainObj[key]) mainObj[key] = obj[key];
+								})
+							}
 						}
 					}
 				}
@@ -223,6 +239,7 @@
 			
 			// Listen for real time updates
 			updateData(){
+				if(!this.expenseDoc) return false;
 				this.expenseDoc.onSnapshot(snapshot => {
 					snapshot.forEach(doc => {
 						// Extract data

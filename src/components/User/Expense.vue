@@ -2,13 +2,13 @@
     <v-flex xs12 class="py-2">
         <v-form v-model="formValid" ref="addForm" name="addForm">
             <v-layout row wrap>
-                <v-expansion-panel v-model="panel" focusable expand>
+                <v-expansion-panel v-model="panel" focusable>
                     <v-expansion-panel-content>
                         <template v-slot:header>
-                            <h3 class="secondary--text">Add Data</h3>
+                            <h3 class="secondary--text">{{ title }} Data</h3>
                         </template>
                         <v-card flat class="grow pa-1" >
-                            <v-layout row wrap>
+                            <v-layout row wrap :key="documentId">
                                 <v-flex class="grow pa-1" v-for="(field, indx) in addFields" :key="indx">
                                     <template v-if="field.hasOwnProperty('input')">
                                         <v-text-field
@@ -17,6 +17,7 @@
                                             :type="field.type"
                                             :rules="field.rules"
                                             :disable="disableFields"
+                                            :key="documentId"
                                         ></v-text-field>
                                     </template>
                                     <template v-if="field.hasOwnProperty('select')">
@@ -25,13 +26,16 @@
                                             v-model="field.value"
                                             :label="field.display"
                                             :rules="field.rules"
+                                            item-text="name"
+                                            item-value="value"
                                             :disable="disableFields"
+                                            :key="documentId"
                                         ></v-select>
                                     </template>
                                 </v-flex>
                                 <v-flex xs12 class="text-xs-center">
-                                    <v-btn flat class="primary" @click="checkData" :disabled="!formValid || disableFields">Add</v-btn>
-                                    <v-btn flat class="primary" @click="$refs.addForm.reset()">Reset</v-btn>
+                                    <v-btn flat class="primary" @click="checkData" :disabled="!formValid || disableFields">{{ title }}</v-btn>
+                                    <v-btn flat class="primary" @click="resetData">Reset</v-btn>
                                 </v-flex>
                             </v-layout>
                         </v-card>
@@ -71,7 +75,7 @@ export default {
                     value: false,
                     display: 'Type',
                     select: true,
-                    options: ['Debit', 'Credit'],
+                    options: [{name: 'Debit', value: 'debit'}, {name: 'Credit', value: 'credit'}],
                     rules:[
                         v => !!v || 'Type is required',
                     ]
@@ -79,7 +83,8 @@ export default {
             },
             formValid: false,
             disableFields: false,
-            panel: null
+            panel: 0,
+            documentId: false
         }
     },
     watch:{
@@ -89,6 +94,24 @@ export default {
         }
     },
     computed:{
+        // Page title
+        title(){
+            if(Object.keys(this.updateObj).length > 0) return 'Update';
+            return 'Add';
+        },
+
+        // Update data obj
+        updateData(){
+            if(Object.keys(this.updateObj).length > 0){
+                Object.keys(this.updateObj).forEach(key => {
+                    if(this.addFields.hasOwnProperty(key)) this.addFields[key]['value'] = this.updateObj[key];
+                });
+                this.documentId = this.updateObj.id;
+                return this.updateObj;
+            }
+            return false;
+        },
+        
         // Current user object
         userObj(){
             return this.$__firebase.fireauth.currentUser;
@@ -109,9 +132,26 @@ export default {
         }
     },
     methods:{
+        // Reset data
+        resetData(){
+            // Reset form
+            this.$refs.addForm.reset();
+            
+            // If update data is present, reset that to
+            if(this.updateData) this.$emit('resetUpdate', true);
+        },
+
         // Check data
         checkData(){
             this.disableFields = true;
+
+            // Check for document for update
+            if(this.updateData){
+                if(!this.documentId){
+                    this.$store.commit('setSnackMsg', 'Invalid document provided !');
+                    return false;
+                }
+            }
 
             // Create ref. to data collection
             let expenseCollection = this.expenseDoc.collection('data');
@@ -150,11 +190,20 @@ export default {
                     // Create ref. to data collection
                     let expenseCollection = this.expenseDoc.collection('data');
 
-                    // Add data to the ref. collection
-                    expenseCollection.add(objVal).then(resp => {
+                    // Add / Update data to the ref. collection
+                    let operate = 'add';
+                    let msg = 'Item added';
+
+                    if(this.updateData && this.documentId){
+                        expenseCollection = expenseCollection.doc(this.documentId);
+                        operate = 'update';
+                        msg = 'Item updated'
+                    }
+
+                    expenseCollection[operate](objVal).then(resp => {
                         // this.$refs.addForm.resetValidation();
                         this.$refs.addForm.reset();
-                        this.$store.commit('setSnackMsg', 'Item added');
+                        this.$store.commit('setSnackMsg', msg);
 
                         this.disableFields = false;
                     }).catch(err => {
@@ -166,9 +215,16 @@ export default {
         }
     },
     props:{
+        // Date for which to add data
         date:{
             default: '',
             type: String
+        },
+
+        // Stores the object data that to be updated
+        updateObj:{
+            default: {},
+            type: Object
         }
     }
 }
