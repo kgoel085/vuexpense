@@ -9,27 +9,27 @@
                         </template>
                         <v-card flat class="grow pa-1" >
                             <v-layout row wrap :key="documentId">
-                                <v-flex class="grow pa-1" v-for="(field, indx) in addFields" :key="indx">
+                                <v-flex class="grow pa-1" v-for="(field, indx) in dataObj" :key="indx">
                                     <template v-if="field.hasOwnProperty('input')">
                                         <v-text-field
-                                            v-model="field.value"
+                                            v-model="fieldValues[indx]"
                                             :label="field.display"
                                             :type="field.type"
                                             :rules="field.rules"
                                             :disable="disableFields"
-                                            :key="documentId"
+                                            :key="field.value"
                                         ></v-text-field>
                                     </template>
                                     <template v-if="field.hasOwnProperty('select')">
                                         <v-select
                                             :items="field.options"
-                                            v-model="field.value"
+                                            v-model="fieldValues[indx]"
                                             :label="field.display"
                                             :rules="field.rules"
                                             item-text="name"
                                             item-value="value"
                                             :disable="disableFields"
-                                            :key="documentId"
+                                            :key="field.value"
                                         ></v-select>
                                     </template>
                                 </v-flex>
@@ -50,9 +50,16 @@
 export default {
     data(){
         return {
+            // Fields value templates, creating issue with computed var so need to separate it
+            fieldValues:{
+                title: null,
+                value: null,
+                type: false,
+            },
+
+            // Fields template
             addFields:{
                 title:{
-                    value: null,
                     display: 'Title',
                     input: true,
                     type: 'text',
@@ -62,7 +69,6 @@ export default {
                     ]
                 },
                 value:{
-                    value: null,
                     display: 'Value',
                     input: true,
                     type: 'number',
@@ -72,7 +78,6 @@ export default {
                     ]
                 },
                 type:{
-                    value: false,
                     display: 'Type',
                     select: true,
                     options: [{name: 'Debit', value: 'debit'}, {name: 'Credit', value: 'credit'}],
@@ -100,16 +105,25 @@ export default {
             return 'Add';
         },
 
-        // Update data obj
-        updateData(){
+        // Update/ Add data obj
+        dataObj(){
+            // Fields template
+            let obj = this.addFields;
+
+            // If data is there to update, overwrite original values
             if(Object.keys(this.updateObj).length > 0){
-                Object.keys(this.updateObj).forEach(key => {
-                    if(this.addFields.hasOwnProperty(key)) this.addFields[key]['value'] = this.updateObj[key];
+
+                // Update values
+                Object.keys(obj).forEach(key => {
+                    if(this.addFields.hasOwnProperty(key)) this.$set(this.fieldValues, key, this.updateObj[key]);
                 });
+
+                // Store document id
                 this.documentId = this.updateObj.id;
-                return this.updateObj;
+                this.$forceUpdate();
             }
-            return false;
+            
+            return obj;
         },
         
         // Current user object
@@ -138,15 +152,15 @@ export default {
             this.$refs.addForm.reset();
             
             // If update data is present, reset that to
-            if(this.updateData) this.$emit('resetUpdate', true);
+            if(this.documentId) this.$emit('resetUpdate', true);
         },
 
-        // Check data
+        // Check data integrity
         checkData(){
             this.disableFields = true;
 
             // Check for document for update
-            if(this.updateData){
+            if(this.documentId){
                 if(!this.documentId){
                     this.$store.commit('setSnackMsg', 'Invalid document provided !');
                     return false;
@@ -161,7 +175,7 @@ export default {
             this.expenseDate.split('-').forEach((key, indx) => expenseCollection = expenseCollection.where(dtArr[indx], '==', parseInt(key)));
 
             // Apply title filter
-            expenseCollection.where('title', '==', this.addFields.title.value).get().then(doc => {  
+            expenseCollection.where('title', '==', this.fieldValues.title).get().then(doc => {  
                 // Add data to document if not exists
                 if(!doc.exists) this.addData();
                 else this.disableFields = false;
@@ -173,9 +187,9 @@ export default {
             let objVal = {};
             
             // Process all the field values
-            Object.keys(this.addFields).forEach(key => {
-                let obj = this.addFields[key];
-                if(obj.value) objVal[key] = (parseInt(obj.value)) ? parseInt(obj.value) : obj.value.toLowerCase();
+            Object.keys(this.fieldValues).forEach(key => {
+                let obj = this.fieldValues[key];
+                if(obj) objVal[key] = (parseInt(obj)) ? parseInt(obj) : obj.toLowerCase();
             });
 
             // If any value is there
@@ -194,7 +208,8 @@ export default {
                     let operate = 'add';
                     let msg = 'Item added';
 
-                    if(this.updateData && this.documentId){
+                    // If update document id is already there
+                    if(this.documentId){
                         expenseCollection = expenseCollection.doc(this.documentId);
                         operate = 'update';
                         msg = 'Item updated'
@@ -202,7 +217,7 @@ export default {
 
                     expenseCollection[operate](objVal).then(resp => {
                         // this.$refs.addForm.resetValidation();
-                        this.$refs.addForm.reset();
+                        this.resetData();
                         this.$store.commit('setSnackMsg', msg);
 
                         this.disableFields = false;
