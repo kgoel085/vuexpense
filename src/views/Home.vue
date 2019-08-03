@@ -20,7 +20,7 @@
 							<v-layout row wrap>
 								<!-- Show fetched data -->
 								<v-slide-x-transition>
-									<v-flex xs12 v-if="!loadingData && (userData.debit.data.length > 0 || userData.credit.data.length > 0)">
+									<v-flex xs12 v-if="!loadingData && hasData">
 										<div class="d-flex justify-between align-center mb-3">
 											<v-btn @click="expandPanel = !expandPanel">{{ (expandPanel) ? 'Collapse' : 'Expand' }}</v-btn>
 										</div>
@@ -169,6 +169,12 @@
 				}
 
 				return false;
+			},
+
+			// Check whether any data is there or not
+			hasData(){
+				if(this.userData.debit.data.length > 0 || this.userData.credit.data.length > 0) return true;
+				return false;
 			}
 		},
 		methods:{
@@ -210,9 +216,27 @@
 				});
 			},
 
+			// Check data for duplicate entries
+			checkData(id = false){
+				if(!id || !this.hasData) return false;
+
+				let keys = Object.keys(this.userData);
+
+				for(let key of keys){
+					let obj = (this.userData.hasOwnProperty(key) && this.userData[key].data.length > 0) ? this.userData[key].data : false;
+					if(obj){
+						obj.forEach(elem => {});
+					}
+				}
+				return false;
+			},
+
 			// Creates the data for the interface
 			createData(obj = false){
 				if(obj){
+					// Check whether same document exists or not
+					if(obj.hasOwnProperty('id') && obj.id) this.checkData(obj.id);
+
 					// Check if current value type exists or not 
 					if(obj.hasOwnProperty('type') && this.userData.hasOwnProperty(obj.type)){
 
