@@ -250,6 +250,9 @@ export default {
                 obj.total = 0;
             });
 
+            // Reset expanded panel
+            this.expandPanel = false;
+
             // Reset update object
             this.rowUpdate = {};
 
