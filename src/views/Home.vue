@@ -6,18 +6,18 @@
 				<v-date-picker v-model="expenseDate" :reactive="true" full-width class="mt-3" :disabled="disableCalender"></v-date-picker>
 
 				<!-- Add / Update Data -->
-				<ManageExpense :date="expenseDate" @disableFields="disableCalender = !disableCalender" :updateObj="rowUpdate" @resetUpdate="rowUpdate = {}"></ManageExpense>
+				<component :is="parentComponent" :date="expenseDate" @disableFields="disableCalender = !disableCalender" :updateObj="rowUpdate" @resetUpdate="rowUpdate = {}" v-if="parentComponent"></component>
 			</v-flex>
 
 			<v-flex xs12 md9 class="pa-1">
 				<v-tabs v-model="currentTab" slider-color="secondary" fixed-tabs :key="expenseDate">
 					<!-- Show data -->
-					<v-tab key="showData" ripple>
-						Expense Data
+					<v-tab v-for="(tab, indx) in tabNav" :key="indx" ripple>
+						{{ tab.title }}
 					</v-tab>
 
-					<v-tab-item key="showData">
-						<ViewExpanse :expenseDate="expenseDate" :disableElem="disableCalender" @updateRow="updateData"></ViewExpanse>
+					<v-tab-item v-for="(tab, indx) in tabNav" :key="indx">
+						<component :is="tab.component" :expenseDate="expenseDate" :disableElem="disableCalender" @updateRow="updateData"></component>
 					</v-tab-item>
 				</v-tabs>
 			</v-flex>
@@ -26,13 +26,19 @@
 </template>
 
 <script>
-	import loader from '@/components/Loader'
-	import ManageExpense from '@/components/User/ManageExpense'
-	import ViewExpanse from '@/components/User/ViewExpense'
+	const loader = () => import("@/components/Loader");
+	const ManageExpense = () => import("@/components/User/ManageExpense");
+	const ViewExpanse = () => import("@/components/User/ViewExpense");
 
 	export default {
 		data(){
 			return {
+				// Tab navigation
+				tabNav:[
+					// Expense Data
+					{'title': 'Expense Data', component: 'ViewExpanse', parent: 'ManageExpense'}
+				],
+
 				// Annual calculations of expenses
 				annualData:{
 					yearly: {
@@ -56,6 +62,24 @@
 
 				// Stores the data of row to be updated
 				rowUpdate:{}
+			}
+		},
+		computed:{
+			// Set the parent component for current tab component
+			parentComponent(){
+				if(this.currentTab || this.currentTab == 0 && this.tabNav.hasOwnProperty(this.currentTab)){
+					let obj = this.tabNav[this.currentTab];
+
+					if(!obj.hasOwnProperty('parent') || !obj.parent) return false;
+
+					switch(this.currentTab){
+						// Expense manager
+						case 0:
+							return obj.parent;		
+						break;
+					}
+				}
+				return false;
 			}
 		},
 		components:{
