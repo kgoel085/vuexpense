@@ -404,6 +404,7 @@
 						// Check if record was previously deleted or not 
 						if(data.hasOwnProperty('delete')){
 							if(data.delete) this.dialog.restore = true;
+							else this.dialog.restore = false;
 						}
 
 						// Set dialog values
