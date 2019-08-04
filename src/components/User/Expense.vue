@@ -54,7 +54,7 @@ export default {
             fieldValues:{
                 title: null,
                 value: null,
-                type: false,
+                type: false
             },
 
             // Fields template
@@ -152,7 +152,10 @@ export default {
             this.$refs.addForm.reset();
             
             // If update data is present, reset that to
-            if(this.documentId) this.$emit('resetUpdate', true);
+            if(this.documentId){
+                this.documentId = false;
+                this.$emit('resetUpdate', true);
+            }
         },
 
         // Check data integrity
@@ -201,6 +204,8 @@ export default {
                 if(date) objVal['date'] = parseInt(date);
 
                 if(Object.keys(objVal).length > 0){
+                    objVal['delete'] = (this.updateObj && this.updateObj.hasOwnProperty('delete')) ? this.updateObj.delete : false;
+
                     // Create ref. to data collection
                     let expenseCollection = this.expenseDoc.collection('data');
 
