@@ -5,7 +5,7 @@
                 <v-layout row wrap>
                     <!-- Data filter -->
                     <v-flex xs12>
-                        <v-select class="shrink"
+                        <v-select class="shrink pa-2 mt-4"
                             :items="filters"
                             label="Show Records"
                             v-model="showRecords"
@@ -86,16 +86,16 @@
                     </v-flex>
                 </v-card-title>
 
-                <v-card-actions class="text-xs-center">
-                    <v-flex xs12>
-                        <v-btn flat class="primary error" @click="deleteRecord(dialog.data.id, dialog.restore)">
+                <v-card-actions>
+                    <v-flex xs12  class="text-xs-center">
+                        <v-btn flat :small="$vuetify.breakpoint.smAndDown" class="primary error ma-1" @click="deleteRecord(dialog.data.id, dialog.restore)">
                             Confirm
                         </v-btn>
-                        <v-btn flat class="secondary" @click="dialog.show = false">
+
+                        <v-btn flat :small="$vuetify.breakpoint.smAndDown" class="secondary ma-1" @click="dialog.show = false">
                             Cancel
                         </v-btn>
                     </v-flex>
-                    
                 </v-card-actions>
             </v-card>
         </v-dialog>
