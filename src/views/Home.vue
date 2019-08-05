@@ -27,8 +27,8 @@
 
 <script>
 	const loader = () => import("@/components/Loader");
-	const ManageExpense = () => import("@/components/User/ManageExpense");
-	const ViewExpanse = () => import("@/components/User/ViewExpense");
+	const ManageExpense = () => import("@/components/Home/ManageExpense");
+	const ViewExpanse = () => import("@/components/Home/ViewExpense");
 
 	export default {
 		data(){
