@@ -27,16 +27,23 @@
 
 <script>
 	const loader = () => import("@/components/Loader");
-	const ManageExpense = () => import("@/components/Home/ManageExpense");
+
+	// Common components
+	const ManageData = () => import("@/components/Home/ManageData");
+
+	// Expense components
 	const ViewExpanse = () => import("@/components/Home/ViewExpense");
+
+	// Reminders components
+	const ViewReminder = () => import("@/components/Home/ViewReminder");
 
 	export default {
 		data(){
 			return {
 				// Tab navigation
 				tabNav:[
-					// Expense Data
-					{'title': 'Expense Data', component: 'ViewExpanse', parent: 'ManageExpense'}
+					{'title': 'Expenses', component: 'ViewExpanse', parent: 'ManageData'},
+					{'title': 'Reminders', component: 'ViewReminder', parent: 'ManageData'}
 				],
 
 				// Annual calculations of expenses
@@ -72,20 +79,16 @@
 
 					if(!obj.hasOwnProperty('parent') || !obj.parent) return false;
 
-					switch(this.currentTab){
-						// Expense manager
-						case 0:
-							return obj.parent;		
-						break;
-					}
+					return obj.parent;
 				}
 				return false;
 			}
 		},
 		components:{
 			loader,
-			ManageExpense,
-			ViewExpanse
+			ManageData,
+			ViewExpanse,
+			ViewReminder
 		},
 		methods:{
 			// Set data for update
