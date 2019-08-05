@@ -43,7 +43,7 @@
 				// Tab navigation
 				tabNav:[
 					{'title': 'Expenses', component: 'ViewExpanse', parent: 'ManageData', doc: 'expenses'},
-					{'title': 'Reminders', component: 'ViewReminder', parent: 'ManageData', doc: 'reminders', excludeFields: ['value']}
+					{'title': 'Reminders', component: 'ViewReminder', parent: 'ManageData', doc: 'reminders', excludeFields: ['type', 'value']}
 				],
 
 				// Annual calculations of expenses
