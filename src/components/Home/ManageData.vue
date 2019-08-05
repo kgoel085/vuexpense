@@ -110,6 +110,14 @@ export default {
             // Fields template
             let obj = this.addFields;
 
+            // If disable fields are provided, do not include them
+            if(this.excludeFields.length > 0){
+                for(let key of Object.keys(obj)){
+                    const val = this.excludeFields.find(elem => elem == key);
+                    if(val) this.$delete(obj, key);
+                }
+            }
+
             // If data is there to update, overwrite original values
             if(Object.keys(this.updateObj).length > 0){
 
@@ -135,7 +143,7 @@ export default {
         expenseDoc(){
 
             // Return the document instance, if available
-            if(this.userObj) return this.$__firebase.firestore.collection('expenses').doc(this.userObj.uid);
+            if(this.userObj && this.saveDoc) return this.$__firebase.firestore.collection(this.saveDoc).doc(this.userObj.uid);
 
             return false;
         },
@@ -238,6 +246,13 @@ export default {
         // Date for which to add data
         date:{
             default: '',
+            type: String,
+            required: true
+        },
+
+        // Get specific document to write / update data in
+        saveDoc:{
+            default: null,
             type: String
         },
 
@@ -245,6 +260,12 @@ export default {
         updateObj:{
             default: {},
             type: Object
+        },
+
+        // Disable the fields which are not required
+        excludeFields:{
+            default: () => {return []},
+            type: Array
         }
     }
 }

@@ -6,17 +6,17 @@
 				<v-date-picker v-model="expenseDate" :reactive="true" full-width class="mt-3" :disabled="disableCalender"></v-date-picker>
 
 				<!-- Add / Update Data -->
-				<component :is="parentComponent" :date="expenseDate" @disableFields="disableCalender = !disableCalender" :updateObj="rowUpdate" @resetUpdate="rowUpdate = {}" v-if="parentComponent"></component>
+				<component v-if="parentComponent" :is="parentComponent.parent" :date="expenseDate" @disableFields="disableCalender = !disableCalender" :updateObj="rowUpdate" @resetUpdate="rowUpdate = {}" :saveDoc="parentComponent.doc" :excludeFields="parentComponent.excludeFields" :key="currentTab"></component>
 			</v-flex>
 
 			<v-flex xs12 md9 class="pa-1">
 				<v-tabs v-model="currentTab" slider-color="secondary" fixed-tabs :key="expenseDate">
 					<!-- Show data -->
-					<v-tab v-for="(tab, indx) in tabNav" :key="indx" ripple>
+					<v-tab v-for="tab in tabNav" :key="tab.title" ripple>
 						{{ tab.title }}
 					</v-tab>
 
-					<v-tab-item v-for="(tab, indx) in tabNav" :key="indx">
+					<v-tab-item v-for="tab in tabNav" :key="tab.component">
 						<component :is="tab.component" :expenseDate="expenseDate" :disableElem="disableCalender" @updateRow="updateData"></component>
 					</v-tab-item>
 				</v-tabs>
@@ -42,8 +42,8 @@
 			return {
 				// Tab navigation
 				tabNav:[
-					{'title': 'Expenses', component: 'ViewExpanse', parent: 'ManageData'},
-					{'title': 'Reminders', component: 'ViewReminder', parent: 'ManageData'}
+					{'title': 'Expenses', component: 'ViewExpanse', parent: 'ManageData', doc: 'expenses'},
+					{'title': 'Reminders', component: 'ViewReminder', parent: 'ManageData', doc: 'reminders', excludeFields: ['value']}
 				],
 
 				// Annual calculations of expenses
@@ -79,7 +79,10 @@
 
 					if(!obj.hasOwnProperty('parent') || !obj.parent) return false;
 
-					return obj.parent;
+					return {
+						parent: obj.parent, 
+						doc: (obj.hasOwnProperty('doc') && obj.doc) ? obj.doc : false, 
+						excludeFields: (obj.hasOwnProperty('excludeFields') && obj.excludeFields.length > 0) ? obj.excludeFields : []};
 				}
 				return false;
 			}
