@@ -103,7 +103,7 @@
 </template>
 
 <script>
-import loader from '@/components/Loader'
+const loader = () => import('@/components/Loader')
 
 export default {
     data(){
