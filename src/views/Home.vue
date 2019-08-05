@@ -29,13 +29,13 @@
 	const loader = () => import("@/components/Loader");
 
 	// Common components
-	const ManageData = () => import("@/components/Home/ManageData");
+	const ManageData = () => import("@/components/User/Data/ManageData");
 
 	// Expense components
-	const ViewExpanse = () => import("@/components/Home/ViewExpense");
+	const ViewExpanse = () => import("@/components/User/Data/ViewExpense");
 
 	// Reminders components
-	const ViewReminder = () => import("@/components/Home/ViewReminder");
+	const ViewReminder = () => import("@/components/User/Data/ViewReminder");
 
 	export default {
 		data(){
