@@ -13,7 +13,6 @@
 					offset-y
 					full-width
 					min-width="290px"
-					:key="currentTab"
 				>
 					<template v-slot:activator="{ on }">
 						<v-text-field
