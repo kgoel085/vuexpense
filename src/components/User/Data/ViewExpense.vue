@@ -114,14 +114,10 @@ export default {
     },
     watch:{
         // Reset everything if date is changed
-        expenseDate(val){
-            this.loadingData = true;
+        updateView(val){
             if(val){
                 // Reset main object
                 this.resetData();
-
-                // Get data for current selected date
-                this.getData();
             }
         },
 
@@ -151,7 +147,7 @@ export default {
                 this.loadingData = false;
                 return true;
             }
-            this.loadingData = true;
+            this.loadingData = false;
             return false;
         }
     },
