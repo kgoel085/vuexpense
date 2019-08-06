@@ -300,34 +300,9 @@ export default {
             }, function(err) {
                 this.$store.commit('setSnackMsg', err.message)
             });
-        },
-
-        // Create data points for calender for all the data
-        getEventData(){
-            this.expenseDoc(false).onSnapshot(snapshot => {
-                snapshot.forEach(doc => {
-                    // Extract data
-                    let data = doc.data();
-
-                    // Get data & send it back
-                    const { date: date, month: month, year: year } = data;
-
-                    const newDate = new Date();
-                    newDate.setDate(date);
-                    newDate.setMonth((month >= 1) ? month - 1 : month);
-                    newDate.setFullYear(year);
-
-                    if(date && month && year) this.$emit('data-point-date', newDate.toISOString().substr(0, 10));
-                });
-            }, function(err) {
-                this.$store.commit('setSnackMsg', err.message)
-            });
         }
     },
     mounted(){
-        // Get expense data for whole month
-        this.getEventData();
-
         // Get actual data
         this.getData();
 

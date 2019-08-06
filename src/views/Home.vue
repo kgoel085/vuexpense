@@ -55,7 +55,7 @@
 					</v-tab>
 
 					<v-tab-item v-for="tab in tabNav" :key="tab.component">
-						<component :is="tab.component" :expenseDate="expenseDate" :disableElem="disableCalender" :updateView="updateView" @update-row="updateData" @confirm-delete="confirmDelete(...arguments)" @data-point-date="setDataPoint"></component>
+						<component :is="tab.component" :expenseDate="expenseDate" :disableElem="disableCalender" :updateView="updateView" @update-row="updateData" @confirm-delete="confirmDelete(...arguments)"></component>
 					</v-tab-item>
 				</v-tabs>
 			</v-flex>
@@ -175,11 +175,13 @@
 					return {
 						parent: obj.parent, 
 						doc: (obj.hasOwnProperty('doc') && obj.doc) ? obj.doc : false, 
-						excludeFields: (obj.hasOwnProperty('excludeFields') && obj.excludeFields.length > 0) ? obj.excludeFields : []};
+						excludeFields: (obj.hasOwnProperty('excludeFields') && obj.excludeFields.length > 0) ? obj.excludeFields : []
+					};
 				}
 				return false;
 			},
 
+			// Dynamically set the data pointers for calender
 			dataPointArr(){
 				return this.dataPointers;
 			}
@@ -200,6 +202,15 @@
 					this.dialog.restore = false;
 				}
 			},
+
+			// Watch for current tab change
+			currentTab(){
+				// Reset event data pointers
+				this.dataPointers = [];
+
+				// Trigger child component update
+				this.triggerComponentUpdate();
+			}
 		},
 		methods:{
 			// Set data for update
@@ -210,12 +221,41 @@
 			// Trigger update for current component
 			triggerComponentUpdate(){
 				this.updateView = Math.random();
+				this.getEventData();
 			},
 
-			// Add values to data points arr
-			setDataPoint(date = false){
-				if(new Date(date) !== "Invalid Date" && !isNaN(new Date(date)) && this.dataPointers.indexOf(date) < 0){
-					this.dataPointers.push(date);
+			// Create data points for calender for all the data
+			getEventData(){
+				if(this.parentComponent.hasOwnProperty('doc')){
+					const expenseDoc = this.$__firebase.firestore.collection(this.parentComponent.doc).doc(this.$__firebase.fireauth.currentUser.uid).collection('data');
+					expenseDoc.onSnapshot(snapshot => {
+						snapshot.forEach(doc => {
+							if(doc.exists){
+								// Extract data
+								let data = doc.data();
+
+								// Get data & send it back
+								const { date: date, month: month, year: year } = data;
+
+								const newDate = new Date();
+								newDate.setDate(date);
+								newDate.setMonth((month >= 1) ? month - 1 : month);
+								newDate.setFullYear(year);
+
+								if(date && month && year){
+									let date = newDate.toISOString().substr(0, 10);
+									if(new Date(date) !== "Invalid Date" && !isNaN(new Date(date)) && this.dataPointers.indexOf(date) < 0){
+										this.dataPointers.push(date);
+									}
+								}
+							}
+							
+						});
+					}, function(err) {
+						this.$store.commit('setSnackMsg', err.message)
+					});
+				}else{
+					this.dataPointers = [];
 				}
 			},
 
@@ -281,6 +321,11 @@
 					this.$store.commit('setSnackMsg', err.message);
 				});
 			}
+		},
+
+		mounted(){
+			// On mount trigger all the component
+			this.triggerComponentUpdate();
 		}
 	}
 </script>
