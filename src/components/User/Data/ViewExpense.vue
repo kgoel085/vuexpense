@@ -2,7 +2,7 @@
     <v-layout row wrap>
         <v-flex xs12>
             <v-card flat>
-                <v-layout row wrap>
+                <v-layout row wrap :key="updateView">
                     <!-- Data filter -->
                     <v-flex xs12>
                         <v-select class="shrink pa-2 mt-4"
@@ -43,11 +43,11 @@
                                         <v-list-tile-action>
                                             <span>
                                                 <span class="delText">{{ data.value }}</span>
-                                                <v-btn small icon class="ma-2" @click="$emit('updateRow', data)">
+                                                <v-btn small icon class="ma-2" @click="$emit('update-row', data)">
                                                     <v-icon size="20" class="px-2">edit</v-icon>
                                                 </v-btn>
 
-                                                <v-btn small icon class="ma-2" @click="confirmDelete(data.id)">
+                                                <v-btn small icon class="ma-2" @click="$emit('confirm-delete', expenseDoc(false), data.id)">
                                                     <v-icon size="20" class="px-2">
                                                         {{ (data.hasOwnProperty('delete') && data.delete == true) ?'restore' : 'delete' }}
                                                     </v-icon>
@@ -66,39 +66,6 @@
                 </v-layout>
             </v-card>
         </v-flex>
-
-        <!-- Confirmation dialog -->
-        <v-dialog
-            v-model="dialog.show"
-            persistent
-            width="50%"
-        >
-            <v-card color="primary" dark v-if="dialog.loading || !dialog.data">
-                <v-card-text>
-                    Please stand by
-                    <v-progress-linear indeterminate color="white" class="mb-0" ></v-progress-linear>
-                </v-card-text>
-            </v-card>
-            <v-card v-else class="grow">
-                <v-card-title class="text-xs-center">
-                    <v-flex xs12>
-                        <span class="headline">Are you sure to {{ (dialog.restore ? 'restore' : 'delete') }} selected record ?</span>
-                    </v-flex>
-                </v-card-title>
-
-                <v-card-actions>
-                    <v-flex xs12  class="text-xs-center">
-                        <v-btn flat :small="$vuetify.breakpoint.smAndDown" class="primary error ma-1" @click="deleteRecord(dialog.data.id, dialog.restore)">
-                            Confirm
-                        </v-btn>
-
-                        <v-btn flat :small="$vuetify.breakpoint.smAndDown" class="secondary ma-1" @click="dialog.show = false">
-                            Cancel
-                        </v-btn>
-                    </v-flex>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
     </v-layout>
 </template>
 
@@ -138,14 +105,6 @@ export default {
             // make expansion panels extended / collapsed
             expandPanel: false,
 
-            // Manages the delete / restore  dialog box 
-            dialog:{
-                show: false,
-                restore: false,
-                loading: true,
-                data: false
-            },
-
             // Which records to show
             showRecords: 1
         }
@@ -172,14 +131,6 @@ export default {
             if(val) this.panel = [...Object.keys(this.userData)].map(_ => true)
             // Close all
             else this.panel = []; 
-        },
-
-        // Reset dialog values
-        'dialog.show'(val){
-            if(!val){
-                this.dialog.data = false;
-                this.dialog.loading = true;
-            }
         },
 
         // Trigger new data whenever a new record type is requested
@@ -351,70 +302,32 @@ export default {
             });
         },
 
-        // Delete data
-        confirmDelete(id = false, restore = false){
-            const expenseCollection = this.expenseDoc(false);
-            if(!id || !expenseCollection) return false;
-
-            // Check if document really exists
-            const expenseDoc = expenseCollection.doc(id);
-            expenseDoc.get().then(doc => {	
-                if(doc.exists){
+        // Create data points for calender for all the data
+        getEventData(){
+            this.expenseDoc(false).onSnapshot(snapshot => {
+                snapshot.forEach(doc => {
+                    // Extract data
                     let data = doc.data();
-                    data['id'] = id;
-                    
-                    // Check if record was previously deleted or not 
-                    if(data.hasOwnProperty('delete')){
-                        if(data.delete) this.dialog.restore = true;
-                        else this.dialog.restore = false;
-                    }
 
-                    // Set dialog values
-                    this.dialog.show = true;
-                    this.dialog.data = data;
-                    this.dialog.loading = false;
-                }
-            }).catch(err => {
-                this.$store.commit('setSnackMsg', err.message);
-            });
-        },
+                    // Get data & send it back
+                    const { date: date, month: month, year: year } = data;
 
-        // Mark the received document as deleted
-        deleteRecord(id, restore = false){
-            this.loading = true;
+                    const newDate = new Date();
+                    newDate.setDate(date);
+                    newDate.setMonth((month >= 1) ? month - 1 : month);
+                    newDate.setFullYear(year);
 
-            // Get collection
-            const expenseCollection = this.expenseDoc(false);
-            if(!id || !expenseCollection){
-                this.loading = false;
-                this.dialog.show = false;
-
-                this.$store.commit('setSnackMsg', 'Unknown Error !');
-                return false;
-            }
-
-            // Get document
-            const expenseDoc = expenseCollection.doc(id);
-            let deleteVal = (restore) ? false : true;
-
-            // Perform operation
-            expenseDoc.update({
-                delete: deleteVal
-            }).then(resp => {
-                this.$store.commit('setSnackMsg', 'Operation successful');
-                
-                this.dialog.show = false;
-                this.loading = false;
-
-                // Refresh data
-                this.getData(true);
-            }).catch(err => {
-                this.loading = false;
-                this.$store.commit('setSnackMsg', err.message);
+                    if(date && month && year) this.$emit('data-point-date', newDate.toISOString().substr(0, 10));
+                });
+            }, function(err) {
+                this.$store.commit('setSnackMsg', err.message)
             });
         }
     },
     mounted(){
+        // Get expense data for whole month
+        this.getEventData();
+
         // Get actual data
         this.getData();
 
@@ -422,6 +335,12 @@ export default {
         this.updateData();
     },
     props:{
+        // Update the current view request from parent
+        updateView:{
+            default: 0,
+            type: Number
+        },
+
         // Perform actions for provided date data
         expenseDate:{
             default: new Date().toISOString().substr(0, 10),
