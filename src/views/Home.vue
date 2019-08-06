@@ -13,11 +13,12 @@
 					offset-y
 					full-width
 					min-width="290px"
+					:key="currentTab"
 				>
 					<template v-slot:activator="{ on }">
 						<v-text-field
 							v-model="expenseDate"
-							label="Picker in menu"
+							label="Select Date"
 							prepend-icon="event"
 							readonly
 							v-on="on"
@@ -35,7 +36,7 @@
 						
 						</v-text-field>
 					</template>
-					<v-date-picker v-model="expenseDate" :disabled="disableCalender" scrollable></v-date-picker>
+					<v-date-picker v-model="expenseDate" :disabled="disableCalender" scrollable :events="dataPointArr"></v-date-picker>
 				</v-menu>
 
 				<!-- Show big picker if selected by user -->
