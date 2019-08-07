@@ -330,3 +330,8 @@
 	}
 </script>
 
+<style>
+	.strikethrough .delText{text-decoration: line-through;}
+</style>
+
+

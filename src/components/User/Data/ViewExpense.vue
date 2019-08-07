@@ -326,6 +326,6 @@ export default {
 }
 </script>
 
-<style scoped>
-	.strikethrough .delText{text-decoration: line-through;}
+<style>
+	
 </style>
