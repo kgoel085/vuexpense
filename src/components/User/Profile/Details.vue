@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import UserProfile from '@/components/User/Profile'
+import UserProfile from '@/components/User/Profile/Profile'
 
 export default {
     data(){

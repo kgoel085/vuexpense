@@ -37,8 +37,8 @@
 
 <script>
 import loader from '@/components/Loader'
-import UserDetails from '@/components/User/Details'
-import UserRules from '@/components/User/Rules'
+import UserDetails from '@/components/User/Profile/Details'
+import UserRules from '@/components/User/Profile/Rules'
 
 export default {
     data(){
