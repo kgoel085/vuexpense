@@ -55,7 +55,7 @@
 					</v-tab>
 
 					<v-tab-item v-for="tab in tabNav" :key="tab.component">
-						<component :is="tab.component" :expenseDate="expenseDate" :disableElem="disableCalender" :updateView="updateView" @update-row="updateData" @confirm-delete="confirmDelete(...arguments)"></component>
+						<component :is="tab.component" :currentUser="currentUser" :currentDoc="currentDoc" :expenseDate="expenseDate" :disableElem="disableCalender" :updateView="updateView" @update-row="updateData" @confirm-delete="confirmDelete(...arguments)"></component>
 					</v-tab-item>
 				</v-tabs>
 			</v-flex>
@@ -181,6 +181,20 @@
 				return false;
 			},
 
+			// Current user object
+			currentUser(){
+				return this.$__firebase.fireauth.currentUser;
+			},
+
+			// Returns current component based document
+			currentDoc(){
+				if(this.parentComponent && this.parentComponent.hasOwnProperty('doc')){
+					return this.$__firebase.firestore.collection(this.parentComponent.doc).doc(this.$__firebase.fireauth.currentUser.uid).collection('data');
+				}
+
+				return false;
+			},
+
 			// Dynamically set the data pointers for calender
 			dataPointArr(){
 				return this.dataPointers;
@@ -226,37 +240,38 @@
 
 			// Create data points for calender for all the data
 			getEventData(){
-				if(this.parentComponent.hasOwnProperty('doc')){
-					const expenseDoc = this.$__firebase.firestore.collection(this.parentComponent.doc).doc(this.$__firebase.fireauth.currentUser.uid).collection('data');
-					expenseDoc.onSnapshot(snapshot => {
-						snapshot.forEach(doc => {
-							if(doc.exists){
-								// Extract data
-								let data = doc.data();
+				// IF no document is found, reset
+				if(!this.currentDoc){
+					this.dataPointers = [];
+					return false;
+				}
 
-								// Get data & send it back
-								const { date: date, month: month, year: year } = data;
+				this.currentDoc.onSnapshot(snapshot => {
+					snapshot.forEach(doc => {
+						if(doc.exists){
+							// Extract data
+							let data = doc.data();
 
-								const newDate = new Date();
-								newDate.setDate(date);
-								newDate.setMonth((month >= 1) ? month - 1 : month);
-								newDate.setFullYear(year);
+							// Get data & send it back
+							const { date: date, month: month, year: year } = data;
 
-								if(date && month && year){
-									let date = newDate.toISOString().substr(0, 10);
-									if(new Date(date) !== "Invalid Date" && !isNaN(new Date(date)) && this.dataPointers.indexOf(date) < 0){
-										this.dataPointers.push(date);
-									}
+							const newDate = new Date();
+							newDate.setDate(date);
+							newDate.setMonth((month >= 1) ? month - 1 : month);
+							newDate.setFullYear(year);
+
+							if(date && month && year){
+								let date = newDate.toISOString().substr(0, 10);
+								if(new Date(date) !== "Invalid Date" && !isNaN(new Date(date)) && this.dataPointers.indexOf(date) < 0){
+									this.dataPointers.push(date);
 								}
 							}
-							
-						});
-					}, function(err) {
-						this.$store.commit('setSnackMsg', err.message)
+						}
+						
 					});
-				}else{
-					this.dataPointers = [];
-				}
+				}, function(err) {
+					this.$store.commit('setSnackMsg', err.message)
+				});
 			},
 
 			// Delete requested data

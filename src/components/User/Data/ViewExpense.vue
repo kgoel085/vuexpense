@@ -106,7 +106,7 @@ export default {
             expandPanel: false,
 
             // Which records to show
-            showRecords: 1
+            showRecords: 0
         }
     },
     components:{
@@ -137,7 +137,7 @@ export default {
     computed:{
         // Current user object
         userObj(){
-            return this.$__firebase.fireauth.currentUser;
+            return this.currentUser;
         },
 
         // Check whether any data is there or not
@@ -156,12 +156,12 @@ export default {
         expenseDoc(filter = true){
 
             // Return the document instance, if available
-            if(this.userObj){
+            if(this.userObj && this.currentDoc){
                 // Date order
                 let dtArr = ['year', 'month', 'date'];
 
                 // Apply filter
-                let expenseDoc = this.$__firebase.firestore.collection('expenses').doc(this.userObj.uid).collection('data');
+                let expenseDoc = this.currentDoc;
 
                 // If filter is required, only then apply it
                 if(filter){
@@ -306,6 +306,18 @@ export default {
         this.updateData();
     },
     props:{
+        // User object
+        currentUser:{
+            default: false,
+            required: true
+        },
+
+        // Component document ref.
+        currentDoc:{
+            default: false,
+            required: true
+        },
+
         // Update the current view request from parent
         updateView:{
             default: 0,
