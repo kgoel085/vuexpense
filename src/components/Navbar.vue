@@ -77,7 +77,7 @@ export default {
 			menu: false,
 			menuItems:[
 				{title: 'Home', to: '/home'},
-				{title: 'Feature Request', to: '/suggest'},
+				// {title: 'Feature Request', to: '/suggest'},
 			]
         }
     },
