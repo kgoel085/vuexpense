@@ -200,7 +200,7 @@ export default {
             // Process all the field values
             Object.keys(this.fieldValues).forEach(key => {
                 let obj = this.fieldValues[key];
-                if(obj) objVal[key] = (parseInt(obj)) ? parseInt(obj) : obj.toLowerCase();
+                if(obj) objVal[key] = (parseInt(obj)) ? parseInt(obj) : (key == 'type') ? obj.toLowerCase() : obj;
             });
 
             // If any value is there
