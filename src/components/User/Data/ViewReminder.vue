@@ -1,5 +1,48 @@
 <template>
+    <v-layout row wrap>
+        <v-flex xs12>
+            <v-card tile>
+                <v-layout row wrap :key="updateView">
+                    <!-- Data filter -->
+                    <v-flex xs12>
+                        <v-select class="shrink pa-2 mt-4"
+                            :items="filters"
+                            label="Show Records"
+                            v-model="showRecords"
+                            item-text="name"
+                            item-value="value"
+                        ></v-select>
+                    </v-flex>
 
+                    <v-flex xs12 v-if="!loadingData && hasData" :key="updateView">
+                        <v-list-tile v-for="item in dataField" :key="item.id">
+                            <v-list-tile-content>
+                                <v-list-tile-title :class="(item.hasOwnProperty('delete') && item.delete == true) ? 'red--text strikethrough' : '' ">
+                                    <span class="delText">{{ item.title }}</span>
+                                </v-list-tile-title>
+                            </v-list-tile-content>
+
+                            <v-list-tile-action>
+                                <v-flex xs12>
+                                    <v-btn icon ripple class="ma-1" @click="$emit('update-row', item)">
+                                        <v-icon color="grey lighten-1">edit</v-icon>
+                                    </v-btn>
+                                    <v-btn icon ripple class="ma-1" @click="$emit('confirm-delete', reminderDoc(false), item.id)">
+                                        <v-icon color="grey lighten-1">delete</v-icon>
+                                    </v-btn>
+                                </v-flex>
+                                
+                            </v-list-tile-action>
+                        </v-list-tile>
+                    </v-flex>
+                    <v-flex xs12 v-else>
+                        <loader v-if="loadingData"></loader>
+                        <v-alert :value="true" type="info" v-else class="ma-2"> No data found </v-alert>
+                    </v-flex>
+                </v-layout>
+            </v-card>
+        </v-flex>
+    </v-layout>
 </template>
 
 <script>
@@ -25,13 +68,36 @@ export default {
             showRecords: 0
         }
     },
+    watch:{
+        // Check if data is there, and loading is still on, then stop it
+        hasData(val){
+            if(val && this.loadingData) this.loadingData = false;
+        },
+
+        // Refresh data for filters
+        showRecords(val){
+            this.getData(true);
+        },
+
+        // Reset everything if date is changed
+        updateView(val){
+            // Reset main object
+            this.getData(true);
+        },
+    },
     computed:{
+        // User auth object
         userObj(){
             return this.$__firebase.fireauth.currentUser;
+        },
+
+        // Check whether any data is available or not
+        hasData(){
+            return (this.dataField.length > 0) ? true : false;
         }
     },
     methods:{
-        // User expense document
+        // User reminder document
         reminderDoc(filter = true){
 
             // Return the document instance, if available
@@ -66,10 +132,13 @@ export default {
 
         // Get reminders data
         getData(refresh = false){
-            // If refresh is called, reset the current data
-            if(refresh) this.$set(this.dataField, []);
+            this.loadingData = true;
+            if(!this.reminderDoc()) return false;
 
-           this.reminderDoc().get().then(snapShot => {
+            // If refresh is called, reset the current data
+            if(refresh) this.dataField = [];
+
+            this.reminderDoc().get().then(snapShot => {
                 snapShot.forEach(doc => {
                     if(doc.exists){
                         let data = doc.data();
@@ -78,7 +147,26 @@ export default {
                         this.createData(data);
                     }
                 });
-           });
+
+                this.loadingData = false;
+            });
+        },
+
+        // Listen for real time updates
+        updateData(){
+            if(!this.reminderDoc()) return false;
+            this.reminderDoc().onSnapshot(snapshot => {
+                snapshot.forEach(doc => {
+                    // Extract data
+                    let data = doc.data();
+                    if(doc.id) data['id'] = doc.id;
+                    
+                    // Add data to interface
+                    this.createData(data);
+                });
+            }, function(err) {
+                this.$store.commit('setSnackMsg', err.message)
+            });
         },
 
         // create data interface
@@ -110,6 +198,9 @@ export default {
     mounted(){
         // Get data first time
         this.getData();
+
+        // Bind update listener
+        this.updateData();
     },
     components:{
         loader
