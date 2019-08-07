@@ -1,9 +1,9 @@
 <template>
-    
+
 </template>
 
 <script>
-const loader = () => import('@/components/loader');
+const loader = () => import('@/components/Loader');
 
 export default {
     data(){
