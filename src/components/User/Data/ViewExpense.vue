@@ -200,7 +200,7 @@ export default {
             showRecords: 0,
 
             // Which overview to show
-            currentOverview: 0
+            currentOverview: 1
         }
     },
     components:{
