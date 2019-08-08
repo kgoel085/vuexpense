@@ -15,7 +15,7 @@
                     </v-flex>
 
                     <!-- Monthly / Daily overview -->
-                    <v-expansion-panel focusable class="pa-2 ma-1 elevation-2" value="0">
+                    <v-expansion-panel focusable class="pa-2 ma-1 elevation-2" :value="0">
                         <v-expansion-panel-content>
                             <template v-slot:header>
                                 <div class="primary--text">
@@ -47,7 +47,7 @@
                                 </v-card-title>
                                 <v-card-text class="pa-1">
                                     <v-layout row wrap>
-                                        <v-flex class="grow pa-1" v-for="(mData, type) in overviewObj" :key="mData.total">
+                                        <v-flex class="grow pa-1" v-for="(mData, type) in overviewObj" :key="mData.color">
                                             <v-card tile hover class="pa-2">
                                                 <v-list-tile>
                                                     <v-list-tile-avatar>
@@ -195,7 +195,7 @@ export default {
             showRecords: 0,
 
             // Which overview to show
-            currentOverview: 1
+            currentOverview: 0
         }
     },
     components:{
@@ -418,7 +418,7 @@ export default {
         getMonthlyData(){
             if(!this.expenseDoc()) return false;
 
-            this.expenseDoc(true, ['year', 'month']).get().then(snapshot => {
+            this.expenseDoc(true, ['year', 'month'], false).get().then(snapshot => {
                  Object.keys(this.monthData).forEach(key => {
                     let obj = this.monthData[key];
                     obj.data = [];
