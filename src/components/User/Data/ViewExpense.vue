@@ -15,7 +15,7 @@
                     </v-flex>
 
                     <!-- Monthly / Daily overview -->
-                    <v-expansion-panel focusable class="pa-2 ma-1 elevation-2" :value="0">
+                    <v-expansion-panel focusable class="pa-2 ma-1 elevation-2" :value="($vuetify.breakpoint.smAndDown) ? null: 0 ">
                         <v-expansion-panel-content>
                             <template v-slot:header>
                                 <div class="primary--text">
@@ -105,7 +105,12 @@
                                     <v-list-tile v-for="(data,indx) in type.data" :key="indx" :class="(data.hasOwnProperty('delete') && data.delete == true) ? 'red--text strikethrough' : '' ">
                                         <v-list-tile-content>
                                             <v-list-tile-title>
-                                                <span class="delText">{{ data.title }}</span> 
+                                                <v-tooltip bottom>
+                                                    <template v-slot:activator="{ on }">
+                                                        <span class="delText text-truncate" v-on="on">{{ ($vuetify.breakpoint.smAndDown) ? data.title.substr(0, 20)+'...' : data.title }}</span>
+                                                    </template>
+                                                    <span>{{ data.title }}</span>
+                                                </v-tooltip>
                                             </v-list-tile-title>
                                         </v-list-tile-content>
 
