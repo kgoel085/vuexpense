@@ -13,7 +13,7 @@
                 <v-alert :value="true" type="info"> Nothing found...! </v-alert>
             </template>
             <template v-else>
-                <keep-alive :key="currentDate">
+                <keep-alive>
                     <component :is="userComponent.component" :expenseDate="currentDate"></component>
                 </keep-alive>
             </template>
