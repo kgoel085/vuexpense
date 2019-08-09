@@ -47,6 +47,8 @@
 </template>
 
 <script>
+import EventBus from '../../../helpers/EventBus';
+
 export default {
     data(){
         return {
@@ -95,7 +97,7 @@ export default {
     watch:{
         // Communicate current field state with parent
         disableFields(val){
-            this.$emit('disableFields', val);
+            EventBus.$emit('disable-element', val);
         }
     },
     computed:{
@@ -162,7 +164,7 @@ export default {
             // If update data is present, reset that to
             if(this.documentId){
                 this.documentId = false;
-                this.$emit('resetUpdate', true);
+                EventBus.$emit('reset-update', true);
             }
         },
 
