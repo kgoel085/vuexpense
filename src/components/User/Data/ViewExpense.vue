@@ -58,7 +58,7 @@
                                                     <v-icon size="20" class="px-2">edit</v-icon>
                                                 </v-btn>
 
-                                                <v-btn small icon class="ma-2" @click="$emit('confirm-delete', expenseDoc(false), data.id)">
+                                                <v-btn small icon class="ma-2" @click="emitDeleteData(data.id)">
                                                     <v-icon size="20" class="px-2">
                                                         {{ (data.hasOwnProperty('delete') && data.delete == true) ?'restore' : 'delete' }}
                                                     </v-icon>
@@ -336,6 +336,11 @@ export default {
         // Emit Updated data
         emitUpdateData(data = false){
             if(data) EventBus.$emit('update-db-data', data);
+        },
+
+        // Emit delete data
+        emitDeleteData(id = false){
+            if(id) EventBus.$emit('delete-db-data', {doc: this.expenseDoc(false), id: id});
         }
     },
     mounted(){

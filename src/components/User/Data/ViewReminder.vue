@@ -24,10 +24,10 @@
 
                             <v-list-tile-action>
                                 <v-flex xs12>
-                                    <v-btn icon ripple class="ma-1" @click="$emit('update-row', item)">
+                                    <v-btn icon ripple class="ma-1" @click="emitUpdateData(item)">
                                         <v-icon color="grey lighten-1">edit</v-icon>
                                     </v-btn>
-                                    <v-btn icon ripple class="ma-1" @click="$emit('confirm-delete', reminderDoc(false), item.id)">
+                                    <v-btn icon ripple class="ma-1" @click="emitDeleteData(item.id)">
                                         <v-icon color="grey lighten-1">delete</v-icon>
                                     </v-btn>
                                 </v-flex>
@@ -46,6 +46,8 @@
 </template>
 
 <script>
+import EventBus from '../../../helpers/EventBus';
+
 const loader = () => import('@/components/Loader');
 
 export default {
@@ -193,6 +195,16 @@ export default {
 
             // Delete the received index
             this.$delete(this.dataField, found);
+        },
+
+        // Emit Updated data
+        emitUpdateData(data = false){
+            if(data) EventBus.$emit('update-db-data', data);
+        },
+
+        // Emit delete data
+        emitDeleteData(id = false){
+            if(id) EventBus.$emit('delete-db-data', {doc: this.reminderDoc(false), id: id});
         }
     },
     mounted(){
