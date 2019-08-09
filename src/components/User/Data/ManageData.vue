@@ -16,7 +16,6 @@
                                             :label="field.display"
                                             :type="field.type"
                                             :rules="field.rules"
-                                            :disable="disableFields"
                                             :key="field.value"
                                         ></v-text-field>
                                     </template>
@@ -28,7 +27,6 @@
                                             :rules="field.rules"
                                             item-text="name"
                                             item-value="value"
-                                            :disable="disableFields"
                                             :key="field.value"
                                         ></v-select>
                                     </template>
@@ -92,12 +90,6 @@ export default {
             disableFields: false,
             panel: 0,
             documentId: false
-        }
-    },
-    watch:{
-        // Communicate current field state with parent
-        disableFields(val){
-            EventBus.$emit('disable-element', val);
         }
     },
     computed:{
