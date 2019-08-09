@@ -14,7 +14,8 @@
             </template>
             <template v-else>
                 <keep-alive>
-                    <component :is="userComponent.component" :expenseDate="currentDate"></component>
+                    <Loader v-if="!currentDate"></Loader>
+                    <component v-else :is="userComponent.component" :expenseDate="currentDate"></component>
                 </keep-alive>
             </template>
         </v-flex>
@@ -26,6 +27,7 @@
 import EventBus from '../../helpers/EventBus';
 
 // Components
+const Loader = () => import('@/components/Loader');
 const ViewExpense = () => import('@/components/User/Data/ViewExpense');
 const ViewReminder = () => import('@/components/User/Data/ViewReminder');
 
@@ -43,6 +45,7 @@ export default {
         }
     },
     components:{
+        Loader,
         ViewExpense,
         ViewReminder
     },
