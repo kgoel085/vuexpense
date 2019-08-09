@@ -127,7 +127,13 @@ export default {
         EventBus.$emit('date-changed', this.currentDate);
 
         // Reset update object
-        EventBus.$on('reset-update', this.updateObj = {});
+        EventBus.$on('reset-update', () => {this.updateObj = {}});
+
+        // Set update object data
+        EventBus.$on('update-db-data', data => this.updateObj = data);
+    },
+    beforeDestroy(){
+        EventBus.$off(['date-changed', 'reset-update', 'update-db-data']);
     }
 }
 </script>

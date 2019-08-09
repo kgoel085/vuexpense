@@ -2,7 +2,7 @@
     <v-layout row wrap>
         <v-flex xs12>
             <v-card flat>
-                <v-layout row wrap :key="updateView">
+                <v-layout row wrap>
                     <!-- Data filter -->
                     <v-flex xs12>
                         <v-select class="shrink pa-2 mt-4"
@@ -15,79 +15,16 @@
                     </v-flex>
 
                     <!-- Monthly / Daily overview -->
-                    <v-expansion-panel focusable class="pa-2 ma-1 elevation-2" :value="($vuetify.breakpoint.smAndDown) ? null: 0 ">
-                        <v-expansion-panel-content>
-                            <template v-slot:header>
-                                <div class="primary--text">
-                                    <v-layout row wrap>
-                                        <v-flex class="grow">
-                                            {{ (currentOverview == 0) ? 'Month' : 'Day' }} Overview
-                                        </v-flex>
-                                        <v-flex class="shrink">
-                                            <v-btn outline color="primary" readonly> <v-icon left>local_atm</v-icon> <span right>{{ monthTotal }}</span></v-btn>
-                                            
-                                        </v-flex>
-                                    </v-layout>
-                                    
-                                </div>
-                            </template>
-                            <v-card flat tile class="grow pa-0">
-                                <v-card-title class="pa-3">
-                                    <v-layout row wrap>
-                                        <v-flex xs12>
-                                            <v-select
-                                                :items="[{name: 'Month', value: 0}, {name: 'Day', value: 1}]"
-                                                label="Select Overview"
-                                                v-model="currentOverview"
-                                                item-text="name"
-                                                item-value="value"
-                                            ></v-select>
-                                        </v-flex>
-                                    </v-layout>
-                                </v-card-title>
-                                <v-card-text class="pa-1">
-                                    <v-layout row wrap>
-                                        <v-flex class="grow pa-1" v-for="(mData, type) in overviewObj" :key="mData.color">
-                                            <v-card tile hover class="pa-2">
-                                                <v-list-tile>
-                                                    <v-list-tile-avatar>
-                                                        <v-icon :size="40" :color="mData.color">{{ mData.icon }}</v-icon>
-                                                    </v-list-tile-avatar>
-
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title left>
-                                                            <small class="grey--text text-capitalize">{{type}} </small> <span class="font-weight-medium px-4"> {{ mData.total }} </span>
-                                                        </v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
-                                            </v-card>
-                                        </v-flex>
-                                        <v-flex class="grow pa-1">
-                                            <v-card tile hover class="pa-2">
-                                                <v-list-tile>
-                                                    <v-list-tile-avatar>
-                                                        <v-icon :size="40" color="secondary">local_atm</v-icon>
-                                                    </v-list-tile-avatar>
-
-                                                    <v-list-tile-content>
-                                                        <v-list-tile-title left>
-                                                            <small class="grey--text text-capitalize">Difference </small> <span class="font-weight-medium px-4"> {{ monthTotal }} </span>
-                                                        </v-list-tile-title>
-                                                    </v-list-tile-content>
-                                                </v-list-tile>
-                                            </v-card>
-                                        </v-flex>
-                                    </v-layout>
-                                </v-card-text>
-                            </v-card>
-                        </v-expansion-panel-content>
-                    </v-expansion-panel>
+                    <v-flex xs12>
+                        <ExpenseOverview></ExpenseOverview>
+                    </v-flex>
 
                     <!-- Show fetched data -->
                     <v-flex xs12 v-if="!loadingData && hasData" class="pa-1">
                         <div class="d-flex justify-between align-center mb-1">
                             <v-btn @click="expandPanel = !expandPanel">{{ (expandPanel) ? 'Collapse' : 'Expand' }}</v-btn>
                         </div>
+
                         <v-expansion-panel v-model="panel" expand popout focusable :disabled="disableElem">
                             <v-expansion-panel-content v-for="(type, indx) in userData" :key="indx">
                                 <template v-slot:header>
@@ -100,7 +37,7 @@
                                         </v-flex>
                                     </v-layout>
                                 </template>
-                                <v-alert :value="true" type="info" v-if="type.data.length == 0" class="ma-2"> No expense data found </v-alert>
+                                 <v-alert :value="true" type="info" v-if="type.data.length == 0" class="ma-2"> No expense data found </v-alert>
                                 <v-card v-else>
                                     <v-list-tile v-for="(data,indx) in type.data" :key="indx" :class="(data.hasOwnProperty('delete') && data.delete == true) ? 'red--text strikethrough' : '' ">
                                         <v-list-tile-content>
@@ -117,7 +54,7 @@
                                         <v-list-tile-action>
                                             <span>
                                                 <span class="delText">{{ data.value }}</span>
-                                                <v-btn small icon class="ma-2" @click="$emit('update-row', data)">
+                                                <v-btn small icon class="ma-2" @click="emitUpdateData(data)">
                                                     <v-icon size="20" class="px-2">edit</v-icon>
                                                 </v-btn>
 
@@ -134,7 +71,7 @@
                         </v-expansion-panel>
                     </v-flex>
                     <v-flex xs12 v-else>
-                        <loader v-if="loadingData"></loader>
+                        <Loader v-if="loadingData"></Loader>
                         <v-alert :value="true" type="info" v-else> No expense data found </v-alert>
                     </v-flex>
                 </v-layout>
@@ -144,28 +81,18 @@
 </template>
 
 <script>
-const loader = () => import('@/components/Loader')
+// Modules
+import EventBus from '../../../helpers/EventBus';
+
+// Components
+const Loader = () => import('@/components/Loader');
+const ExpenseOverview = () => import('@/components/User/Data/ExpenseOverview');
+
 export default {
     data(){
         return {
             // Stores the current expense data 
             userData: {
-                debit: {
-                    data: [],
-                    total: 0,
-                    color: 'red',
-                    icon: 'money_off'
-                },
-                credit: {
-                    data: [],
-                    total: 0,
-                    color: 'success',
-                    icon: 'attach_money'
-                }
-            },
-
-            // Month data analysis
-            monthData: {
                 debit: {
                     data: [],
                     total: 0,
@@ -187,6 +114,9 @@ export default {
                 {name: 'Deleted', value: 2}		// Show deleted records only
             ],
 
+             // Which records to show
+            showRecords: 0,
+
             // A loader identifier
             loadingData: false,
 
@@ -195,21 +125,12 @@ export default {
 
             // make expansion panels extended / collapsed
             expandPanel: false,
-
-            // Which records to show
-            showRecords: 0,
-
-            // Which overview to show
-            currentOverview: 1
         }
     },
-    components:{
-        loader
-    },
     watch:{
-        // Reset everything if date is changed
-        updateView(val){
-            if(val) this.resetData();
+        // Emit update events when date is changed
+        expenseDate(val){
+            EventBus.$emit('update-overview-data', val);
         },
 
         // Manage the expand / collapse of divs
@@ -219,13 +140,13 @@ export default {
             // Close all
             else this.panel = []; 
         },
-
-        // Trigger new data whenever a new record type is requested
-        showRecords(val){
-            this.getData(true);
-        }
     },
     computed:{
+        // Current selected date
+        expenseDate(){
+            return this.$store.state.home.currentDate;
+        },
+
         // Current user object
         userObj(){
             return this.$__firebase.fireauth.currentUser;
@@ -242,15 +163,9 @@ export default {
             return false;
         },
 
-        // Check whether current month has any data or not
-        monthTotal(){
-            let obj = (this.currentOverview == 0) ? this.monthData : this.userData;
-            return obj.credit.total - obj.debit.total;
-        },
-
-        // Overview data
-        overviewObj(){
-            return (this.currentOverview == 0) ? this.monthData : this.userData;
+        // Disable elements
+        disableElem(){
+            return this.$store.state.home.disableElements;
         }
     },
     methods:{
@@ -301,27 +216,9 @@ export default {
             return false;
         },
 
-        // Reset the user data
-        resetData(){
-            // Reset main object
-            Object.keys(this.userData).forEach(key => {
-                let obj = this.userData[key];
-                obj.data = [];
-                obj.total = 0;
-            });
-
-            // Reset expanded panel
-            this.expandPanel = false;
-
-            // Reset update object
-            this.rowUpdate = {};
-
-            // Bind update method again
-            this.updateData();
-        },
-
         // Get the current date data
         getData(refresh = false){
+            this.loadingData = true;
             if(!this.expenseDoc()) return false;
             if(refresh === true) this.resetData();
 
@@ -396,16 +293,12 @@ export default {
                 }
             }
         },
-        
+
         // Listen for real time updates
         updateData(){
             if(!this.expenseDoc()) return false;
 
             this.expenseDoc().onSnapshot(snapshot => {
-
-                // Get current month data
-                this.getMonthlyData();
-
                 snapshot.forEach(doc => {
                     // Extract data
                     let data = doc.data();
@@ -419,60 +312,49 @@ export default {
             });
         },
 
-        // Get monthly data
-        getMonthlyData(){
-            if(!this.expenseDoc()) return false;
-
-            this.expenseDoc(true, ['year', 'month'], false).get().then(snapshot => {
-                 Object.keys(this.monthData).forEach(key => {
-                    let obj = this.monthData[key];
-                    obj.data = [];
-                    obj.total = 0;
-                });
-
-                snapshot.forEach(doc => {
-                    if(doc.exists){
-                        let data = doc.data();
-                        data['id'] = doc.id;
-
-                        // Store the month data
-                        this.createData(data, this.monthData);
-                    }
-                });
+        // Reset the user data
+        resetData(){
+            // Reset main object
+            Object.keys(this.userData).forEach(key => {
+                let obj = this.userData[key];
+                obj.data = [];
+                obj.total = 0;
             });
+
+            // Reset expanded panel
+            this.expandPanel = false;
+
+            // Bind update method again
+            this.updateData();
+        },
+
+        // Emit Updated data
+        emitUpdateData(data = false){
+            if(data) EventBus.$emit('update-db-data', data);
         }
     },
     mounted(){
         // Get actual data
         this.getData();
 
-        // Get current month data
-        this.getMonthlyData();
-
         // Listen for real time updates
         this.updateData();
+
+        // Event Listeners
+
+            //  Date changed, refresh data 
+            EventBus.$on('date-changed', date => {if(date) this.getData(true);});
     },
-    props:{
-        // Update the current view request from parent
-        updateView:{
-            default: 0,
-            type: Number
-        },
-
-        // Perform actions for provided date data
-        expenseDate:{
-            default: new Date().toISOString().substr(0, 10),
-        },
-
-        // Disable elements if parent says so
-        disableElem:{
-            default: false,
-            type: Boolean
-        }
+    beforeDestroy(){
+        EventBus.$off('date-changed');
+    },
+    components:{
+        Loader,
+        ExpenseOverview
     }
 }
 </script>
 
 <style>
-	
+
 </style>

@@ -37,6 +37,9 @@ export default {
 		EventBus.$on('set-tab', tab => this.$store.commit('setHomeTab', tab));
 		EventBus.$on('set-tab-data', data => this.$store.commit('setHomeTabData', data));
 		EventBus.$on('disable-element', state => this.$store.commit('disableElements', state));
+	},
+	beforeDestroy(){
+		EventBus.$off(['date-changed', 'set-tab', 'set-tab-data', 'disable-element']);
 	}
 }
 </script>
