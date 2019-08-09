@@ -13,7 +13,9 @@
                 <v-alert :value="true" type="info"> Nothing found...! </v-alert>
             </template>
             <template v-else>
-                
+                <keep-alive :key="currentDate">
+                    <component :is="userComponent.component" :expenseDate="currentDate"></component>
+                </keep-alive>
             </template>
         </v-flex>
     </v-layout>
@@ -23,12 +25,16 @@
 // Modules
 import EventBus from '../../helpers/EventBus';
 
+// Components
+const ViewExpense = () => import('@/components/User/Data/ViewExpense');
+const ViewReminder = () => import('@/components/User/Data/ViewReminder');
+
 export default {
     data(){
         return {
             // Tab navigation
             tabNav:[
-                {'title': 'Expenses', component: 'ViewExpanse', doc: 'expenses'},
+                {'title': 'Expenses', component: 'ViewExpense', doc: 'expenses'},
                 {'title': 'Reminders', component: 'ViewReminder', doc: 'reminders', excludeFields: ['type', 'value']}
             ],
 
@@ -36,12 +42,9 @@ export default {
             currentTab: 0
         }
     },
-    watch:{
-        // Listen for tab changes
-        userComponent(val){
-            EventBus.$emit('set-tab', this.currentTab);
-            EventBus.$emit('set-tab-data', this.tabNav[this.currentTab]);
-        }
+    components:{
+        ViewExpense,
+        ViewReminder
     },
     computed:{
         // User component for current tab
@@ -52,6 +55,13 @@ export default {
         // Current Date
         currentDate(){
             return this.$store.state.home.currentDate;
+        }
+    },
+    watch:{
+        // Listen for tab changes
+        userComponent(val){
+            EventBus.$emit('set-tab', this.currentTab);
+            EventBus.$emit('set-tab-data', this.tabNav[this.currentTab]);
         }
     },
     mounted(){
