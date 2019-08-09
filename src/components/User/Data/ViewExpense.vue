@@ -140,6 +140,11 @@ export default {
             // Close all
             else this.panel = []; 
         },
+
+        // Get new data for new filter
+        showRecords(val){
+            this.getData(true);
+        }
     },
     computed:{
         // Current selected date
