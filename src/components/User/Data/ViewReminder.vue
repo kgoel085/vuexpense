@@ -2,7 +2,7 @@
     <v-layout row wrap>
         <v-flex xs12>
             <v-card tile>
-                <v-layout row wrap :key="updateView">
+                <v-layout row wrap>
                     <!-- Data filter -->
                     <v-flex xs12>
                         <v-select class="shrink pa-2 mt-4"
@@ -14,7 +14,7 @@
                         ></v-select>
                     </v-flex>
 
-                    <v-flex xs12 v-if="!loadingData && hasData" :key="updateView">
+                    <v-flex xs12 v-if="!loadingData && hasData">
                         <v-list-tile v-for="item in dataField" :key="item.id">
                             <v-list-tile-content>
                                 <v-list-tile-title :class="(item.hasOwnProperty('delete') && item.delete == true) ? 'red--text strikethrough' : '' ">
@@ -79,18 +79,17 @@ export default {
         // Refresh data for filters
         showRecords(val){
             this.getData(true);
-        },
-
-        // Reset everything if date is changed
-        updateView(val){
-            // Reset main object
-            this.getData(true);
-        },
+        }
     },
     computed:{
         // User auth object
         userObj(){
             return this.$__firebase.fireauth.currentUser;
+        },
+
+        // Current selected date
+        expenseDate(){
+            return this.$store.state.home.currentDate;
         },
 
         // Check whether any data is available or not
@@ -213,22 +212,14 @@ export default {
 
         // Bind update listener
         this.updateData();
+
+        // Event listener for date changed
+        EventBus.$on('date-changed', date => this.getData(true));
     },
     components:{
         loader
     },
     props:{
-        // Update the current view request from parent
-        updateView:{
-            default: 0,
-            type: Number
-        },
-
-        // Perform actions for provided date data
-        expenseDate:{
-            default: new Date().toISOString().substr(0, 10),
-        },
-
         // Disable elements if parent says so
         disableElem:{
             default: false,
