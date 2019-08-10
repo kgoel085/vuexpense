@@ -16,7 +16,6 @@
                                             :label="field.display"
                                             :type="field.type"
                                             :rules="field.rules"
-                                            :disable="disableFields"
                                             :key="field.value"
                                         ></v-text-field>
                                     </template>
@@ -28,7 +27,6 @@
                                             :rules="field.rules"
                                             item-text="name"
                                             item-value="value"
-                                            :disable="disableFields"
                                             :key="field.value"
                                         ></v-select>
                                     </template>
@@ -47,6 +45,8 @@
 </template>
 
 <script>
+import EventBus from '../../../helpers/EventBus';
+
 export default {
     data(){
         return {
@@ -90,12 +90,6 @@ export default {
             disableFields: false,
             panel: 0,
             documentId: false
-        }
-    },
-    watch:{
-        // Communicate current field state with parent
-        disableFields(val){
-            this.$emit('disableFields', val);
         }
     },
     computed:{
@@ -162,7 +156,7 @@ export default {
             // If update data is present, reset that to
             if(this.documentId){
                 this.documentId = false;
-                this.$emit('resetUpdate', true);
+                EventBus.$emit('reset-update', true);
             }
         },
 

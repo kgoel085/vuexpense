@@ -2,7 +2,7 @@
     <v-layout row wrap>
         <v-flex xs12>
             <v-card tile>
-                <v-layout row wrap :key="updateView">
+                <v-layout row wrap>
                     <!-- Data filter -->
                     <v-flex xs12>
                         <v-select class="shrink pa-2 mt-4"
@@ -14,7 +14,7 @@
                         ></v-select>
                     </v-flex>
 
-                    <v-flex xs12 v-if="!loadingData && hasData" :key="updateView">
+                    <v-flex xs12 v-if="!loadingData && hasData">
                         <v-list-tile v-for="item in dataField" :key="item.id">
                             <v-list-tile-content>
                                 <v-list-tile-title :class="(item.hasOwnProperty('delete') && item.delete == true) ? 'red--text strikethrough' : '' ">
@@ -24,10 +24,10 @@
 
                             <v-list-tile-action>
                                 <v-flex xs12>
-                                    <v-btn icon ripple class="ma-1" @click="$emit('update-row', item)">
+                                    <v-btn icon ripple class="ma-1" @click="emitUpdateData(item)">
                                         <v-icon color="grey lighten-1">edit</v-icon>
                                     </v-btn>
-                                    <v-btn icon ripple class="ma-1" @click="$emit('confirm-delete', reminderDoc(false), item.id)">
+                                    <v-btn icon ripple class="ma-1" @click="emitDeleteData(item.id)">
                                         <v-icon color="grey lighten-1">delete</v-icon>
                                     </v-btn>
                                 </v-flex>
@@ -46,6 +46,8 @@
 </template>
 
 <script>
+import EventBus from '../../../helpers/EventBus';
+
 const loader = () => import('@/components/Loader');
 
 export default {
@@ -77,18 +79,17 @@ export default {
         // Refresh data for filters
         showRecords(val){
             this.getData(true);
-        },
-
-        // Reset everything if date is changed
-        updateView(val){
-            // Reset main object
-            this.getData(true);
-        },
+        }
     },
     computed:{
         // User auth object
         userObj(){
             return this.$__firebase.fireauth.currentUser;
+        },
+
+        // Current selected date
+        expenseDate(){
+            return this.$store.state.home.currentDate;
         },
 
         // Check whether any data is available or not
@@ -193,6 +194,16 @@ export default {
 
             // Delete the received index
             this.$delete(this.dataField, found);
+        },
+
+        // Emit Updated data
+        emitUpdateData(data = false){
+            if(data) EventBus.$emit('update-db-data', data);
+        },
+
+        // Emit delete data
+        emitDeleteData(id = false){
+            if(id) EventBus.$emit('delete-db-data', {doc: this.reminderDoc(false), id: id});
         }
     },
     mounted(){
@@ -201,22 +212,14 @@ export default {
 
         // Bind update listener
         this.updateData();
+
+        // Event listener for date changed
+        EventBus.$on('date-changed', date => this.getData(true));
     },
     components:{
         loader
     },
     props:{
-        // Update the current view request from parent
-        updateView:{
-            default: 0,
-            type: Number
-        },
-
-        // Perform actions for provided date data
-        expenseDate:{
-            default: new Date().toISOString().substr(0, 10),
-        },
-
         // Disable elements if parent says so
         disableElem:{
             default: false,
