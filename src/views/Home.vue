@@ -67,6 +67,12 @@ export default {
 			},
 		}
 	},
+	computed:{
+		// Current tab data
+		currentTab(){
+			return this.$store.state.home.tabData;
+		}
+	},
 	watch:{
 		// Reset dialog values
 		'dialog.show'(val){
@@ -77,6 +83,10 @@ export default {
 				this.dialog.restore = false;
 			}
 		},
+		currentTab(val){
+			// Process data points for the current tab
+			this.processCalenderDataPoints();
+		}
 	},
 	methods:{
 		// Delete requested data
@@ -140,6 +150,43 @@ export default {
 				this.loading = false;
 				this.$store.commit('setSnackMsg', err.message);
 			});
+		},
+
+		// Process the received snapshot data and pass processed data to calender
+		processCalenderDataPoints(){
+			if(!this.currentTab || !this.currentTab.hasOwnProperty('doc')) return false;
+
+			// Get all the available data points
+			const doc = this.$__firebase.firestore.collection(this.currentTab.doc).doc(this.$__firebase.fireauth.currentUser.uid).collection('data');
+			if(!doc) return false;
+			
+			let returnVal = false;
+
+			// Get Data
+            doc.get().then(snapShot => {
+                if(!snapShot.empty){
+					snapShot.forEach(doc => {
+						if(doc.exists){
+							if(!returnVal) returnVal = [];
+
+							let {date, month, year} = doc.data();
+							if(month && month >= 1) month -= 1;
+
+							const newDate = new Date();
+							newDate.setFullYear(year);
+							newDate.setMonth(month);
+							newDate.setDate(date);
+
+							const finalDate = newDate.toISOString().substr(0, 10);
+
+							if(returnVal.indexOf(finalDate) < 0) returnVal.push(finalDate);
+						}
+					});
+				}
+				
+				// Emit the data points to other components
+				EventBus.$emit('capture-data-points', returnVal);
+            });
 		}
 	},
 	components:{
@@ -149,7 +196,7 @@ export default {
 	mounted(){
 		// Set vuex variables
 		EventBus.$on('date-changed', date => this.$store.commit('setHomeDate', date));
-		EventBus.$on('set-tab', tab => this.$store.commit('setHomeTab', tab));
+		EventBus.$on('set-tab', tab => {this.$store.commit('setHomeTab', tab); this.processCalenderDataPoints()});
 		EventBus.$on('set-tab-data', data => this.$store.commit('setHomeTabData', data));
 		EventBus.$on('disable-element', state => this.$store.commit('disableElements', state));
 		EventBus.$on('delete-db-data', ({doc, id}) => this.confirmDelete(doc, id));

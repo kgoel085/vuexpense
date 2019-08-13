@@ -116,6 +116,18 @@ export default {
             EventBus.$emit('date-changed', val);
         }
     },
+    methods:{
+        // Capture's data points thrown by components
+        getDataPoints(data = false){
+            if(!data || typeof data !== 'object') return false;
+            
+            this.dataPointers = [];
+
+            data.forEach(date => {
+                if(this.dataPointers.indexOf(date) < 0) this.dataPointers.push(date);
+            });
+        }
+    },
     components:{
         ManageData
     },
@@ -126,14 +138,20 @@ export default {
         // Emit the current date
         EventBus.$emit('date-changed', this.currentDate);
 
+        // Capture tab change
+        EventBus.$on('set-tab', () => {this.dataPointers = []});
+
         // Reset update object
         EventBus.$on('reset-update', () => {this.updateObj = {}});
 
         // Set update object data
         EventBus.$on('update-db-data', data => this.updateObj = data);
+
+        // Set data points on calender
+        EventBus.$on('capture-data-points', data => this.getDataPoints(data));
     },
     beforeDestroy(){
-        EventBus.$off(['date-changed', 'reset-update', 'update-db-data']);
+        EventBus.$off(['date-changed', 'reset-update', 'update-db-data', 'capture-data-points', 'set-tab']);
     }
 }
 </script>
