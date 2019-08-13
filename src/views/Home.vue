@@ -155,7 +155,7 @@ export default {
 		EventBus.$on('delete-db-data', ({doc, id}) => this.confirmDelete(doc, id));
 	},
 	beforeDestroy(){
-		EventBus.$off(['date-changed', 'set-tab', 'set-tab-data', 'disable-element']);
+		EventBus.$off(['date-changed', 'set-tab', 'set-tab-data', 'disable-element', 'delete-db-data']);
 	}
 }
 </script>
