@@ -32,19 +32,51 @@
                     <v-card-text v-if="showOverview">
                         <v-layout row wrap>
                             <v-flex class="grow pa-1" v-for="(mData, type) in overviewObj" :key="mData.color">
-                                <v-card tile hover class="pa-2">
-                                    <v-list-tile>
-                                        <v-list-tile-avatar>
-                                            <v-icon :size="40" :color="mData.color">{{ mData.icon }}</v-icon>
-                                        </v-list-tile-avatar>
+                                <v-menu open-on-hover top offset-y>
+                                    <template v-slot:activator="{ on }">
+                                        <v-card tile hover class="pa-2" v-on="(mData.data.length > 1) ? on : false">
+                                            <v-list-tile>
+                                                <v-list-tile-avatar>
+                                                    <v-icon :size="40" :color="mData.color">{{ mData.icon }}</v-icon>
+                                                </v-list-tile-avatar>
 
-                                        <v-list-tile-content>
-                                            <v-list-tile-title left>
-                                                <small class="grey--text text-capitalize">{{type}} </small> <span class="font-weight-medium px-4"> {{ mData.total }} </span>
-                                            </v-list-tile-title>
-                                        </v-list-tile-content>
-                                    </v-list-tile>
-                                </v-card>
+                                                <v-list-tile-content>
+                                                    <v-list-tile-title left>
+                                                        <small class="grey--text text-capitalize">{{type}} </small> <span class="font-weight-medium px-4"> {{ mData.total }} </span>
+                                                    </v-list-tile-title>
+                                                </v-list-tile-content>
+                                            </v-list-tile>
+                                        </v-card>
+                                    </template>
+                                    
+                                    <!-- Tooltip content -->
+                                    <v-card flat tile>
+                                        <v-card-title class="pa-2">
+                                            <h3>Last 5 entries</h3>
+                                        </v-card-title>
+                                        <v-card-text class="pa-1">
+                                            <template v-for="(data, indx) in mData.data">
+                                                <v-list-tile :key="data.id" class="pa-1">
+                                                    <v-list-tile-content>
+                                                        <v-list-tile-title v-html="data.title"></v-list-tile-title>
+                                                        <v-list-tile-sub-title class="grey--text darken-4" v-html="data.value"></v-list-tile-sub-title>
+                                                    </v-list-tile-content>
+                                                </v-list-tile>
+
+                                                <v-divider :key="indx" v-if="indx < mData.data.length - 1"></v-divider>
+                                            </template>
+                                        </v-card-text>
+
+                                        <v-card-actions v-if="mData.hasOwnProperty('moreData') && mData.moreData">
+                                            <v-layout row wrap>
+                                                <v-flex xs12 class="text-xs-center">
+                                                    <v-btn flat class="primary">More Data</v-btn>
+                                                </v-flex>
+                                            </v-layout>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-menu>
+                                
                             </v-flex>
                             <v-flex class="grow pa-1">
                                 <v-card tile hover class="pa-2">
@@ -115,6 +147,15 @@ export default {
 
         // Overview data
         overviewObj(){
+            for(let key of Object.keys(this.monthData)){
+                let obj = this.monthData[key];
+
+                // Return only last 5 records
+                if(obj.hasOwnProperty('data') && obj.data.length > 5){
+                    obj.data = obj.data.slice(1).slice(-5);
+                    obj.moreData = true;
+                }
+            }
             return this.monthData;
         },
 
