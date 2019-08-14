@@ -1,5 +1,5 @@
 <template>
-    <v-form ref="loginForm" name='loginForm' v-model="formData.valid" @keyup.native.enter="valdiate">
+    <v-form ref="loginForm" name='loginForm' v-model="formValid" @keyup.native.enter="valdiate">
         <v-container fluid>
             <v-layout row wrap>
                 <v-flex xs12>
@@ -29,7 +29,7 @@
                     </v-layout>
                 </v-flex>
                 <v-flex xs12 class="text-xs-center">
-                    <v-btn flat @click="valdiate" class="secondary" :disabled="!formData.valid || disableBtn">{{ title }}</v-btn>
+                    <v-btn flat @click="valdiate" class="secondary" :disabled="!formValid || disableBtn">{{ title }}</v-btn>
                     <v-btn flat :to="btnUrl" class="secondary" :disabled="disableBtn" v-if="!$store.state.firebase.newUser">{{ btnTitle }}</v-btn>
                 </v-flex>
             </v-layout>
@@ -53,6 +53,8 @@
 </template>
 
 <script>
+import filter from '../helpers/filters';
+
 export default {
     data(){
         return{
@@ -69,39 +71,8 @@ export default {
             // Disable btn
             disableBtn: false,
 
-            // Form validation rules
-            formData:{
-                username: {
-                    value: null, 
-                    rules:[
-                        v => !!v || 'Name is required',
-                        v => (v && v.length >= 6) || 'Name must be greater than 6 characters'
-                    ]
-                },
-                email: {
-                    value: null, 
-                    rules:[
-                        v => !!v || 'E-mail is required',
-                        v => /.+@.+/.test(v) || 'E-mail must be valid'
-                    ]
-                },
-                password: {
-                    value: null,
-                    showPass: false, 
-                    rules:[
-                        v => !!v || 'Password is required',
-                        v => (v && v.length > 6) || 'Password must be greater than 6 characters'
-                    ]
-                },
-                confirmPassword: {
-                    value: null, 
-                    showPass: false,
-                    rules:[
-                        v => (!!v && v) === this.formData.password.value || 'Password does not matches'
-                    ]
-                },
-                valid: false
-            }
+            // Form valid
+            formValid: false
         }
     },
     computed:{
@@ -120,6 +91,24 @@ export default {
         btnUrl(){
             if(this.loginPg) return '/signup';
             return '/login';
+        },
+
+        // Form validation filters
+        filterArr(){
+            return (this.loginPg) ? ['username', 'email', 'password']:  ['username', 'email', 'password', 'confirmPassword'];
+        },
+
+        // Form validation rules
+        formData(){
+            let returnObj = {};
+
+            // Get all the filters
+            this.filterArr.forEach(key => {
+                const [reqFilter]= filter.getFilters([key]);
+                returnObj[key] = reqFilter;
+            });
+
+            return returnObj;
         }
     },
     methods:{
