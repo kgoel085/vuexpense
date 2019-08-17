@@ -2,6 +2,18 @@
     <v-form ref="loginForm" name='loginForm' v-model="formValid" @keyup.native.enter="valdiate">
         <v-container fluid>
             <v-layout row wrap>
+                <v-flex xs6 offset-xs3>
+                    <v-alert v-model="demoSignUp" type="info">
+                        <p class="ma-0">
+                            <span>Please use the below details at the login screen to sign in</span>
+                        </p>
+                        <p class="ma-0">
+                            <strong>Email: </strong> test@test.com<br>
+                            <strong>Password: </strong> 12345678
+                        </p>
+                    </v-alert>
+                </v-flex>
+
                 <v-flex xs12>
                     <h1>{{ title }}</h1>
                 </v-flex>
@@ -72,7 +84,10 @@ export default {
             disableBtn: false,
 
             // Form valid
-            formValid: false
+            formValid: false,
+
+            // For demo sign Up only
+            demoSignUp: (process.env.VUE_APP_SIGN_UP == 1) ? true : false
         }
     },
     computed:{
@@ -139,6 +154,16 @@ export default {
             // Disable both buttons
             this.disableBtn = true;
 
+            if(process.env.VUE_APP_SIGN_UP == 1 && !this.loginPg){
+                this.$store.commit('setSnackMsg', 'Sign Up triggered');
+                this.demoSignUp = true;
+                this.$refs.loginForm.reset();
+
+                this.disableBtn = false;
+
+                return false;
+            }
+
             // Set required function to be called
             let auth = (this.loginPg) ? 'signInWithEmailAndPassword' : 'createUserWithEmailAndPassword';
 
@@ -146,10 +171,8 @@ export default {
                 
                 // If page is not login
                 if(!this.loginPg){
-                    
                     // Create user collection entry
                     this.createUser(resp.user);
-                    
                 }else{
                     // For logged in user
                     if(resp.hasOwnProperty('user')){
