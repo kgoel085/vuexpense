@@ -2,18 +2,6 @@
     <v-form ref="loginForm" name='loginForm' v-model="formValid" @keyup.native.enter="valdiate">
         <v-container fluid>
             <v-layout row wrap>
-                <v-flex xs6 offset-xs3>
-                    <v-alert v-model="demoSignUp" type="info">
-                        <p class="ma-0">
-                            <span>Please use the below details at the login screen to sign in</span>
-                        </p>
-                        <p class="ma-0">
-                            <strong>Email: </strong> test@test.com<br>
-                            <strong>Password: </strong> 12345678
-                        </p>
-                    </v-alert>
-                </v-flex>
-
                 <v-flex xs12>
                     <h1>{{ title }}</h1>
                 </v-flex>
@@ -28,15 +16,15 @@
                     <v-text-field label="Email" v-model="formData.email.value" :rules="formData.email.rules"></v-text-field>
                 </v-flex>
                 <v-flex xs12 v-if="loginPg">
-                    <v-text-field :type="formData.password.showPass ? 'text' : 'password'" label="Password" v-model="formData.password.value" :rules="formData.password.rules" @click:append="formData.password.showPass = !formData.password.showPass" :append-icon="formData.password.showPass ? 'visibility' : 'visibility_off'"></v-text-field>
+                    <v-text-field :type="formData.password.showPass ? 'text' : 'password'" label="Password" v-model="formData.password.value" :rules="formData.password.rules"></v-text-field>
                 </v-flex>
                 <v-flex xs12 v-else>
                     <v-layout row wrap>
                         <v-flex xs12 sm6 md6 lg6 xl6 class="pa-1">
-                            <v-text-field :type="formData.password.showPass ? 'text' : 'password'" label="Password" v-model="formData.password.value" :rules="formData.password.rules" @click:append="formData.password.showPass = !formData.password.showPass" :append-icon="formData.password.showPass ? 'visibility' : 'visibility_off'"></v-text-field>
+                            <v-text-field :type="formData.password.showPass ? 'text' : 'password'" label="Password" v-model="formData.password.value" :rules="formData.password.rules" ></v-text-field>
                         </v-flex>
                         <v-flex xs12 sm6 md6 lg6 xl6 class="pa-1">
-                            <v-text-field :type="formData.confirmPassword.showPass ? 'text' : 'password'" label="Confirm Password" v-model="formData.confirmPassword.value" :rules="formData.confirmPassword.rules" @click:append="formData.confirmPassword.showPass = !formData.confirmPassword.showPass" :append-icon="formData.confirmPassword.showPass ? 'visibility' : 'visibility_off'"></v-text-field>
+                            <v-text-field :type="formData.confirmPassword.showPass ? 'text' : 'password'" label="Confirm Password" v-model="formData.confirmPassword.value" :rules="formData.confirmPassword.rules" ></v-text-field>
                         </v-flex>
                     </v-layout>
                 </v-flex>
@@ -47,10 +35,24 @@
             </v-layout>
         </v-container>
 
+        <!-- Demo Sign Up snackbar -->
+        <v-snackbar v-model="demoSignUp" color="blue darken-2" bottom right multi-line :timeout="0">
+            <v-layout row wrap class="text-xs-center">
+                <v-flex xs12 >
+                    <strong>Please use the below details at the login screen to sign in</strong>
+                </v-flex>
+                <v-flex xs12 class="py-2">
+                    <strong>Email: </strong> test@test.com<br>
+                    <strong>Password: </strong> 12345678
+                </v-flex>
+            </v-layout>
+        </v-snackbar> 
+
         <!-- Show login / signup related msgs -->
         <v-snackbar
             v-model="snackbar.show"
             :color="snackbar.color"
+            bottom
         >
             {{ snackbar.msg }}
             <v-btn
@@ -154,10 +156,12 @@ export default {
             // Disable both buttons
             this.disableBtn = true;
 
-            if(process.env.VUE_APP_SIGN_UP == 1 && !this.loginPg){
+            if(this.demoSignUp && !this.loginPg){
                 this.$store.commit('setSnackMsg', 'Sign Up triggered');
                 this.demoSignUp = true;
                 this.$refs.loginForm.reset();
+
+                this.$router.push({name: 'login'});
 
                 this.disableBtn = false;
 
