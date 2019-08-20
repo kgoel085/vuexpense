@@ -28,7 +28,7 @@
                                 <v-text-field type="number" browser-autocomplete="off" clearable flat full-width label="Enter your number" v-model="stepperStat.phoneNumber"></v-text-field>
                             </v-card>
                             <v-btn color="primary" :disabled="!stepperStat.phoneNumber || !validPhone" @click="stepperStat.stat = 3">Continue</v-btn>
-                            <v-btn flat>Cancel</v-btn>
+                            <v-btn flat @click="stepperStat.stat--">Go Back</v-btn>
                         </v-stepper-content>
 
                         <v-stepper-step :complete="stepperStat.stat > 3" step="3">
@@ -40,7 +40,7 @@
                                 <div id="reCaptcha"></div>
                             </v-card>
                             <v-btn color="primary" :disabled="!stepperStat.captcha.verified" @click="getConfirmationCode">Continue</v-btn>
-                            <v-btn flat>Cancel</v-btn>
+                            <v-btn flat @click="stepperStat.stat--">Go Back</v-btn>
                         </v-stepper-content>
 
                         <v-stepper-step :complete="stepperStat.stat > 4" step="4">
@@ -53,7 +53,7 @@
                                 <v-text-field type="password" browser-autocomplete="off" clearable flat full-width label="Enter password" v-model="stepperStat.password"></v-text-field>
                             </v-card>
                             <v-btn color="primary" :disabled="!stepperStat.confirmation.code || stepperStat.confirmation.code.length == 0 || !stepperStat.password" @click="confirmCode">Continue</v-btn>
-                            <v-btn flat>Cancel</v-btn>
+                            <v-btn flat @click="stepperStat.stat--">Go Back</v-btn>
                         </v-stepper-content>
                     </v-stepper>
                 </v-card-text>
@@ -125,10 +125,11 @@ export default {
             const obj = this.stepperStat.captcha;
 
             // Turn off phone auth app verification. Testing purpose
-            //firebase.auth().settings.appVerificationDisabledForTesting = true;
-            this.stepperStat.phoneNumber = "1234569870";
-            this.stepperStat.confirmation.code = "123456";
-
+            if(process.env.hasOwnProperty('VUE_APP_DEBUG_PHONE_VERIFICATION') && process.env.VUE_APP_DEBUG_PHONE_VERIFICATION == 1){
+                firebase.auth().settings.appVerificationDisabledForTesting = true;
+                this.stepperStat.phoneNumber = "1234569870";
+                this.stepperStat.confirmation.code = "123456";
+            }
 
             // Initiate ReCaptcha for Phone Auth
             obj.container = new firebase.auth.RecaptchaVerifier(obj.element, {
@@ -181,13 +182,15 @@ export default {
             if(finalCredential){
                 //Link credentials with user current logged in provider
                 this.userObj.linkWithCredential(finalCredential).then(usercred => {
-                    var user = usercred.user;
-                    console.log("Account linking success", user);
+                    //var user = usercred.user;
+                    //console.log("Account linking success", user);
+                    
+                    this.$store.commit('setSnackMsg', 'Phone number linked successfully');
+                    EventBus.$emit('hidePhoneVerify', true);
                 }, error => {
-                    console.log("Account linking error", error);
+                    this.$store.commit('setSnackMsg', error.message);
                 });
             }
-            console.log(finalCredential);
         }
     },
     mounted(){
