@@ -49,9 +49,10 @@
 
                         <v-stepper-content step="4">
                             <v-card flat class="mb-2" >
-                                <v-text-field type="number" browser-autocomplete="off" clearable flat full-width label="Enter code" v-model="stepperStat.confirmation.code"></v-text-field>
+                                <v-text-field type="text" browser-autocomplete="off" clearable flat full-width label="Enter code" v-model="stepperStat.confirmation.code"></v-text-field>
+                                <v-text-field type="password" browser-autocomplete="off" clearable flat full-width label="Enter password" v-model="stepperStat.password"></v-text-field>
                             </v-card>
-                            <v-btn color="primary" :disabled="!stepperStat.confirmation.code || stepperStat.confirmation.code.length == 0" @click="confirmCode">Continue</v-btn>
+                            <v-btn color="primary" :disabled="!stepperStat.confirmation.code || stepperStat.confirmation.code.length == 0 || !stepperStat.password" @click="confirmCode">Continue</v-btn>
                             <v-btn flat>Cancel</v-btn>
                         </v-stepper-content>
                     </v-stepper>
@@ -83,8 +84,9 @@ export default {
                 },
                 confirmation:{
                     code: null,
-                    container: null
-                }
+                    verificationCode: null
+                },
+                password: null
             }
         }
     },
@@ -110,12 +112,23 @@ export default {
         validPhone(){
             const pattern = /^[\d]{1,10}$/;
             return (this.stepperStat.phoneNumber.search(pattern) !== -1 && this.stepperStat.phoneNumber.length == 10);
+        },
+
+        // Returns current user instance
+        userObj(){
+            return this.$__firebase.fireauth.currentUser;
         }
     },
     methods:{
         // Set phone auth required params
         initApp(){
             const obj = this.stepperStat.captcha;
+
+            // Turn off phone auth app verification. Testing purpose
+            //firebase.auth().settings.appVerificationDisabledForTesting = true;
+            this.stepperStat.phoneNumber = "1234569870";
+            this.stepperStat.confirmation.code = "123456";
+
 
             // Initiate ReCaptcha for Phone Auth
             obj.container = new firebase.auth.RecaptchaVerifier(obj.element, {
@@ -136,13 +149,20 @@ export default {
         // Request Confirmation code
         getConfirmationCode(){
             const obj = this.stepperStat;
+
+            // Attach country code with phone number
             if(obj.phoneCode && obj.phoneCode.indexOf('+') < 0) obj.phoneCode = '+'+obj.phoneCode;
             const phoneNumber = obj.phoneCode+obj.phoneNumber;
 
-            firebase.auth().signInWithPhoneNumber(phoneNumber, obj.captcha.container).then(function(confirmResult){
-                // SMS sent. Prompt user to type the code from the message, then sign the
-                // user in with confirmationResult.confirm(code).
-                obj.confirmation.container = confirmResult;
+            // Create phone auth provider object
+            const provider = new firebase.auth.PhoneAuthProvider();
+
+            // Use signInWithPhoneNumber() method to sign in user with phone number verification code
+            provider.verifyPhoneNumber(phoneNumber, obj.captcha.container).then(function(verificationId){
+                // SMS sent. Prompt user to type the code from the message, then verify
+
+                // Store the verification id & move to next block
+                obj.confirmation.verificationCode = verificationId;
                 obj.stat += 1;
             }).catch(err => {
                 obj.stat = 2;
@@ -154,26 +174,24 @@ export default {
         // Verify the submitted code
         confirmCode(e){
             e.preventDefault();
+            const obj = this.stepperStat;
 
-            let obj = this.stepperStat;
-
-            obj.confirmation.container.confirm(obj.confirmation.code).then(result => {
-                // Link the phone provider with current user
-
-                // Get phone auth provider credentials
-                var credential = firebase.auth.PhoneAuthProvider.credential( obj.confirmation.container.verificationId, obj.confirmation.code);
-
-                // Link credentials with current user provider
-                firebase.auth().currentUser.linkAndRetrieveDataWithCredential(credential).then(function(usercred) {
+            // Create credentials from the verification id & verification code
+            const finalCredential = firebase.auth.PhoneAuthProvider.credential(obj.confirmation.verificationCode,obj.confirmation.code);
+            if(finalCredential){
+                //Link credentials with user current logged in provider
+                this.userObj.linkWithCredential(finalCredential).then(usercred => {
                     var user = usercred.user;
                     console.log("Account linking success", user);
-                }, function(error) {
+                }, error => {
                     console.log("Account linking error", error);
                 });
-            })
+            }
+            console.log(finalCredential);
         }
     },
     mounted(){
+        // Set the required parameters
         this.initApp();
 
         // Get Location of IP address
