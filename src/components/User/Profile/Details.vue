@@ -205,10 +205,11 @@ export default {
     },
     mounted(){
         EventBus.$on('setModuleStat', stat => this.phoneVerifyBlock.moduleStat = stat);
+        EventBus.$on('hidePhoneVerify', stat => this.phoneVerifyBlock.show = false);
     },
     beforeDestroy(){
         EventBus.$off([
-            'setModuleStat',
+            'setModuleStat', 'hidePhoneVerify'
         ]);
     },
     props:{
