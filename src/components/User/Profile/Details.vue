@@ -9,7 +9,7 @@
                     </v-card-title>
 
                     <!-- User data fields -->
-                    <v-card-text class="pa-4">
+                    <v-card-text class="pa-4" :key="$store.state.global.updateView">
                         <v-layout row wrap>
                             <v-flex class="grow pa-2" v-for="(input, indx) in dataCols.switch" :key="indx">
                                 <v-checkbox
@@ -205,7 +205,7 @@ export default {
     },
     mounted(){
         EventBus.$on('setModuleStat', stat => this.phoneVerifyBlock.moduleStat = stat);
-        EventBus.$on('hidePhoneVerify', stat => this.phoneVerifyBlock.show = false);
+        EventBus.$on('hidePhoneVerify', stat => {this.phoneVerifyBlock.show = false, this.$store.commit('setView')});
     },
     beforeDestroy(){
         EventBus.$off([
