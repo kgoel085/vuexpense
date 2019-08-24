@@ -125,6 +125,9 @@ export default {
 
             // make expansion panels extended / collapsed
             expandPanel: false,
+
+            // Update listener
+            updateListener: false
         }
     },
     watch:{
@@ -303,7 +306,7 @@ export default {
         updateData(){
             if(!this.expenseDoc()) return false;
 
-            this.expenseDoc().onSnapshot(snapshot => {
+            this.updateListener = this.expenseDoc().onSnapshot(snapshot => {
                 snapshot.forEach(doc => {
                     // Extract data
                     let data = doc.data();
@@ -356,6 +359,7 @@ export default {
             EventBus.$on('date-changed', date => {if(date) this.getData(true);});
     },
     beforeDestroy(){
+        if(this.updateListener && typeof this.updateListener == 'function') this.updateListener();
         EventBus.$off('date-changed');
     },
     components:{

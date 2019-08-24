@@ -67,7 +67,10 @@ export default {
             loadingData: false,
 
             // Which records to show
-            showRecords: 0
+            showRecords: 0,
+
+            // Update listener
+            updateListener: false
         }
     },
     watch:{
@@ -156,7 +159,7 @@ export default {
         // Listen for real time updates
         updateData(){
             if(!this.reminderDoc()) return false;
-            this.reminderDoc().onSnapshot(snapshot => {
+            this.updateListener = this.reminderDoc().onSnapshot(snapshot => {
                 snapshot.forEach(doc => {
                     // Extract data
                     let data = doc.data();
@@ -215,6 +218,10 @@ export default {
 
         // Event listener for date changed
         EventBus.$on('date-changed', date => this.getData(true));
+    },
+    beforeDestroy(){
+        // Destroy the listener
+        if(this.updateListener && typeof this.updateListener == 'function') this.updateListener();
     },
     components:{
         loader
