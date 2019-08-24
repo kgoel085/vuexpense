@@ -82,7 +82,7 @@ router.beforeEach((to, frm, nxt) => {
     if(!currentUser) nxt('login');
     else{
       // Check if user is a new user or not 
-      checkUser(nxt);
+      //checkUser(nxt);
     }
 
   }  
