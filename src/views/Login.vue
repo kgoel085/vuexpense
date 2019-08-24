@@ -33,6 +33,12 @@
                     <v-btn flat :to="btnUrl" class="secondary" :disabled="disableBtn" v-if="!$store.state.firebase.newUser">{{ btnTitle }}</v-btn>
                 </v-flex>
             </v-layout>
+
+            <v-layout v-if="disableBtn">
+                <v-flex xs12>
+                    <loader></loader>
+                </v-flex>
+            </v-layout>
         </v-container>
 
         <!-- Demo Sign Up snackbar -->
@@ -68,6 +74,7 @@
 
 <script>
 import filter from '../helpers/filters';
+const loader = () => import('../components/Loader'); 
 
 export default {
     data(){
@@ -91,6 +98,9 @@ export default {
             // For demo sign Up only
             demoSignUp: (process.env.VUE_APP_SIGN_UP == 1) ? true : false
         }
+    },
+    components:{
+        loader
     },
     computed:{
         // Returns title
