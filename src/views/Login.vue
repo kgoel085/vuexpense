@@ -214,12 +214,11 @@ export default {
                         displayName: vm.formData.username.value
                     });
                 }).then(() => {
-
                     // Sign out new user , default working of firebase
-                    this.$store.commit('setNewUser', `Sign Up successfull.`);
-                    //this.$__firebase.fireauth.signOut();
-                    this.$store.dispatch('signUserOut');
-                
+                    const msg = `Sign Up successfull.`;
+                    
+                    this.$store.commit('setNewUser', msg);
+                    this.$store.dispatch('signUserOut', msg);
                 }).catch(err => {
                     this.disableBtn = false;
 
@@ -248,7 +247,7 @@ export default {
         vm.$refs.loginForm.reset();
 
         // If signed / logged in redirect to home and only redirect if user is not new ( Signed Up )
-        if(this.$store.state.firebase.user && !this.$store.state.global.newUser) this.$router.push({name: 'home'});
+        if(this.loginPg && this.$store.state.firebase.user && !this.$store.state.global.newUser) this.$router.push({name: 'home'});
 
         // Show msg if set any
         if(this.msg || this.$store.state.firebase.newUser){

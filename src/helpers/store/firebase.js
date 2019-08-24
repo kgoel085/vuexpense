@@ -28,12 +28,14 @@ const firebaseObj = {
     },
     actions: {
         // Sign user out
-        signUserOut(context){
+        signUserOut(context, val = 'User signed out'){
             fBase.fireauth.signOut().then(resp => {
                 router.push({
                     name: 'login', 
-                    params:{msg: (context.state.global.newUser && typeof context.state.global.newUser == 'string') ? context.state.global.newUser : 'User signed out'}
+                    params:{msg: val}
                 });
+            }).catch(err => {
+                
             });
         }
     },
