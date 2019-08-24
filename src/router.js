@@ -7,7 +7,7 @@ Vue.use(Router)
 
 // Check if user is a new user or not, If yes redirect to complete setup
 const checkUser = async function(nxt){
-  // If user state isalready to new, redirect to user setup
+  // If user state is already to new, redirect to user setup
   if(store.state.firebase.newUser) nxt('user');
 
   let userDoc = firebase.firestore.collection('users').doc(firebase.fireauth.currentUser.uid);
@@ -68,6 +68,8 @@ const router = new Router({
 
 // Set up auth for each route 
 router.beforeEach((to, frm, nxt) => {
+  if(store.state.global.newUser && typeof store.state.global.newUser == 'string') nxt('login');
+
   // For login / signup routes only
   if(to.name == 'login' || to.name == 'signup'){
     store.commit('setNav', false);

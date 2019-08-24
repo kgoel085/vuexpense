@@ -1,6 +1,7 @@
 // It contains all the state vars needed at global level
 const global = {
-    state: { 
+    state: {
+        firstLoad: true,
         showNav: true,
         updateView: true,
         snackbar:{
@@ -23,6 +24,11 @@ const global = {
         // Update the main view
         setView(state, val = true){
             state.updateView = Math.random();
+        },
+
+        // Update the main view
+        setFirstLoad(state, val = true){
+            state.firstLoad = false;
         }
     },
     actions: {

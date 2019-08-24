@@ -13,27 +13,24 @@ Vue.config.productionTip = false
 
 // Only mount app, if firebase auth object is ready to use
 fBase.fireauth.onAuthStateChanged(usr => {
+  // Default route path
+  let routeObj = {name: 'login'};
+
+  // Check for user object
+  let userObj = (usr) ? usr : false;
+  store.commit('setUser', userObj);
+
+  // Render the app
   new Vue({
     router,
     store,
     render: h => h(App)
   }).$mount('#app');
 
-  // Check if user is logging in first time or not
-  let firstTimeUser = (store.state.firebase.user) ? false : true;
-
-  // Update current user status
-  store.commit('setUser', usr);
+  // Redirect to login, if user is not there or new user is set for the current request 
+  if(!usr || (store.state.global.newUser && typeof store.state.global.newUser == 'string')) router.push(routeObj);
 
   // Update the main view, when user is updated
   store.commit('setView');
-
-  // If current user is no longer present
-  if(!usr){
-    let routeObj = {name: 'login'};
-    if(!firstTimeUser) routeObj['params'] = {msg: 'User Logged / Timed Out '};
-
-    router.push(routeObj);
-  }
 });
 

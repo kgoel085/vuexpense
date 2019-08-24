@@ -106,7 +106,10 @@ export default {
     methods:{
       // Logout current user
       logout(){
-        this.$__firebase.fireauth.signOut();
+		// this.$__firebase.fireauth.signOut().then(resp => {
+		// 	//this.$router.push({name: 'login', params: {msg: 'User Logged / Timed Out '}})
+		// }).catch();
+		this.$store.dispatch('signUserOut');
       }
     }
 }

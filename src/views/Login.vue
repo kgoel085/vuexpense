@@ -176,7 +176,7 @@ export default {
                 // If page is not login
                 if(!this.loginPg){
                     // Create user collection entry
-                    this.createUser(resp.user);
+                    return this.createUser(resp.user);
                 }else{
                     // For logged in user
                     if(resp.hasOwnProperty('user')){
@@ -217,7 +217,8 @@ export default {
 
                     // Sign out new user , default working of firebase
                     this.$store.commit('setNewUser', `Sign Up successfull.`);
-                    this.$__firebase.fireauth.signOut();
+                    //this.$__firebase.fireauth.signOut();
+                    this.$store.dispatch('signUserOut');
                 
                 }).catch(err => {
                     this.disableBtn = false;
@@ -246,10 +247,8 @@ export default {
         let vm = this;
         vm.$refs.loginForm.reset();
 
-        // If signed / logged in redirect to home
-        if(this.$store.state.firebase.user){
-            this.$router.push({name: 'home'});
-        }
+        // If signed / logged in redirect to home and only redirect if user is not new ( Signed Up )
+        if(this.$store.state.firebase.user && !this.$store.state.global.newUser) this.$router.push({name: 'home'});
 
         // Show msg if set any
         if(this.msg || this.$store.state.firebase.newUser){
