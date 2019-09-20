@@ -173,6 +173,8 @@ export default {
     methods:{
         // DB document
         doc(){
+            if(!this.userObj) return false;
+
             let doc = this.$__firebase.firestore.collection('expenses').doc(this.userObj.uid).collection('data');
             const [year, month, date] = this.currentDate.split('-');
 

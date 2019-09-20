@@ -33,6 +33,12 @@
                     <v-btn flat :to="btnUrl" class="secondary" :disabled="disableBtn" v-if="!$store.state.firebase.newUser">{{ btnTitle }}</v-btn>
                 </v-flex>
             </v-layout>
+
+            <v-layout v-if="disableBtn">
+                <v-flex xs12>
+                    <loader></loader>
+                </v-flex>
+            </v-layout>
         </v-container>
 
         <!-- Demo Sign Up snackbar -->
@@ -68,6 +74,7 @@
 
 <script>
 import filter from '../helpers/filters';
+const loader = () => import('../components/Loader'); 
 
 export default {
     data(){
@@ -91,6 +98,9 @@ export default {
             // For demo sign Up only
             demoSignUp: (process.env.VUE_APP_SIGN_UP == 1) ? true : false
         }
+    },
+    components:{
+        loader
     },
     computed:{
         // Returns title
@@ -176,7 +186,7 @@ export default {
                 // If page is not login
                 if(!this.loginPg){
                     // Create user collection entry
-                    this.createUser(resp.user);
+                    return this.createUser(resp.user);
                 }else{
                     // For logged in user
                     if(resp.hasOwnProperty('user')){
@@ -214,11 +224,11 @@ export default {
                         displayName: vm.formData.username.value
                     });
                 }).then(() => {
-
                     // Sign out new user , default working of firebase
-                    this.$store.commit('setNewUser', `Sign Up successfull.`);
-                    this.$__firebase.fireauth.signOut();
-                
+                    const msg = `Sign Up successfull.`;
+                    
+                    this.$store.commit('setNewUser', msg);
+                    this.$store.dispatch('signUserOut', msg);
                 }).catch(err => {
                     this.disableBtn = false;
 
@@ -246,10 +256,8 @@ export default {
         let vm = this;
         vm.$refs.loginForm.reset();
 
-        // If signed / logged in redirect to home
-        if(this.$store.state.firebase.user){
-            this.$router.push({name: 'home'});
-        }
+        // If signed / logged in redirect to home and only redirect if user is not new ( Signed Up )
+        if(this.loginPg && this.$store.state.firebase.user && !this.$store.state.global.newUser) this.$router.push({name: 'home'});
 
         // Show msg if set any
         if(this.msg || this.$store.state.firebase.newUser){

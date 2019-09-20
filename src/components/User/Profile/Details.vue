@@ -9,7 +9,7 @@
                     </v-card-title>
 
                     <!-- User data fields -->
-                    <v-card-text class="pa-4">
+                    <v-card-text class="pa-4" :key="$store.state.global.updateView">
                         <v-layout row wrap>
                             <v-flex class="grow pa-2" v-for="(input, indx) in dataCols.switch" :key="indx">
                                 <v-checkbox
@@ -29,22 +29,43 @@
                         <v-layout row wrap>
                             <v-flex xs12 class="text-xs-center">
                                 <v-btn :disabled="!dirtyVals || !validForm" flat class="primary" @click="updateUser">Update</v-btn>
+                                <v-slide-x-transition>
+                                     <v-btn v-if="!UserObj.phoneNumber" class="primary" :disabled="phoneVerifyBlock.show" @click=setVerifyBlock>
+                                        Add & Verify Phone
+                                    </v-btn>
+                                </v-slide-x-transition>
                             </v-flex>
                         </v-layout>
                     </v-card-actions>
                 </v-card>
             </v-flex>
         </v-layout>
+        <v-slide-y-transition>
+            <v-layout row wrap v-if="phoneVerifyBlock.show">
+                <v-flex xs12>
+                    <VerifyPhone></VerifyPhone>
+                </v-flex>
+            </v-layout>
+        </v-slide-y-transition>
+        
     </v-form>
 </template>
 
 <script>
 import UserProfile from '@/components/User/Profile/Profile'
+import VerifyPhone from '@/components/User/Profile/VerifyPhone'
+import EventBus from '../../../helpers/EventBus';
 
 export default {
     data(){
         return {
             validForm: false,
+
+            // Show phone verification block
+            phoneVerifyBlock:{
+                show: false,
+                moduleStat: false
+            },
 
             // All the below fields are taken from here :
             // https://firebase.google.com/docs/reference/js/firebase.User
@@ -76,11 +97,6 @@ export default {
                         value: this.user.phoneNumber,
                         dirty: false,
                         readonly: true
-                    },
-                    photoURL: {
-                        dirty: false,
-                        value: this.user.photoURL,
-                        display:false
                     }
                 },
 
@@ -93,7 +109,8 @@ export default {
         }
     },
     components:{
-        UserProfile
+        UserProfile,
+        VerifyPhone
     },
     computed:{
         // Current user object
@@ -176,7 +193,24 @@ export default {
                 this.dataCols.input.photoURL.value = src;
                 this.checkFields('photoURL');
             }
+        },
+
+        // Set verify phone block values
+        setVerifyBlock(){
+            let block = this.phoneVerifyBlock;
+
+            let setValue = !this.phoneVerifyBlock.show;
+            this.phoneVerifyBlock.show = setValue;
         }
+    },
+    mounted(){
+        EventBus.$on('setModuleStat', stat => this.phoneVerifyBlock.moduleStat = stat);
+        EventBus.$on('hidePhoneVerify', stat => {this.phoneVerifyBlock.show = false, this.$store.commit('setView')});
+    },
+    beforeDestroy(){
+        EventBus.$off([
+            'setModuleStat', 'hidePhoneVerify'
+        ]);
     },
     props:{
         user: {

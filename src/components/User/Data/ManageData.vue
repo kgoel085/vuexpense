@@ -238,11 +238,7 @@ export default {
     },
     props:{
         // Date for which to add data
-        date:{
-            default: '',
-            type: String,
-            required: true
-        },
+        date:{},
 
         // Get specific document to write / update data in
         saveDoc:{

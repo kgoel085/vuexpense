@@ -1,5 +1,9 @@
+// Initialize firebase hook for vue object 
+import fBase from '../../helpers/firebase';
+import router from '../../router';
+
 // It contains all the state vars needed at global level
-const firebase = {
+const firebaseObj = {
     state: { 
         // States current auth status of the user
         user: false,
@@ -23,11 +27,21 @@ const firebase = {
         }
     },
     actions: {
-
+        // Sign user out
+        signUserOut(context, val = 'User signed out'){
+            fBase.fireauth.signOut().then(resp => {
+                router.push({
+                    name: 'login', 
+                    params:{msg: val}
+                });
+            }).catch(err => {
+                
+            });
+        }
     },
     getters: {
 
     }
 };
 
-export default firebase;
+export default firebaseObj;
