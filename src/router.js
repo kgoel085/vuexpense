@@ -62,7 +62,19 @@ const router = new Router({
       path: '/suggest',
       name: 'suggest',
       component: () => import('./views/Suggestions.vue')
-    }
+	},
+	{
+		path: '/settings',
+		name: 'settings',
+		component: () => import('./views/Settings.vue'),
+		children:[
+			{
+				path: '/currency',
+				name: 'settings.currency',
+				component: () => import('./components/Settings/currency.vue')
+			}
+		]
+	}
   ]
 });
 
