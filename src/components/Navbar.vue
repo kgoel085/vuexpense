@@ -1,36 +1,46 @@
 <template>
-    <v-toolbar app class="primary" v-if="show">
-		<v-toolbar-title class="headline text-uppercase">
-			<span>Vuetify</span>
-			<span class="font-weight-light">MATERIAL DESIGN</span>
-		</v-toolbar-title>
-		<v-spacer></v-spacer>
+	<div>
+		<v-toolbar app class="primary" v-if="show">
+			<v-toolbar-side-icon @click="drawer = !drawer"></v-toolbar-side-icon>
+			<v-toolbar-title class="headline text-uppercase">
+				<span>Vuetify</span>
+				<span class="font-weight-light">MATERIAL DESIGN</span>
+			</v-toolbar-title>
+			<v-spacer></v-spacer>
 
-		<!-- Navigation Links -->
-		<v-btn flat class="secondary hidden-sm-and-down" dark :to="item.to" v-for="(item, indx) in menuItems" :key="indx">{{ item.title }}</v-btn>
+			<!-- Navigation Links -->
+			<!-- <v-btn flat class="secondary hidden-sm-and-down" dark :to="item.to" v-for="(item, indx) in menuItems" :key="indx">{{ item.title }}</v-btn> -->
 
-		<!-- Mobile Navigation links -->
-		<v-menu class="hidden-md-and-up">
-			<v-toolbar-side-icon slot="activator"></v-toolbar-side-icon>
-			<v-list>
-			<v-list-tile v-for="(item, indx) in menuItems" :key="indx">
-				<v-list-tile-content>
-					<v-btn flat block light :to="item.to">{{ item.title }}</v-btn>
-				</v-list-tile-content>
-			</v-list-tile>   
+			<!-- Mobile Navigation links -->
+			<!-- <v-menu class="hidden-md-and-up">
+				<v-toolbar-side-icon slot="activator"></v-toolbar-side-icon>
+				<v-list>
+					<v-list-tile v-for="(item, indx) in menuItems" :key="indx">
+						<v-list-tile-content>
+							<v-btn flat block light :to="item.to">{{ item.title }}</v-btn>
+						</v-list-tile-content>
+					</v-list-tile>   
+				</v-list>
+			</v-menu> -->
+		</v-toolbar>
+
+		<v-navigation-drawer
+			v-model="drawer"
+			app
+		>
+			<v-list class="pa-1">
+				<v-list-tile avatar  @click="showProfileMenu">
+					<v-list-tile-avatar>
+						<img :src="userInfo.photoUrl" >
+					</v-list-tile-avatar>
+
+					<v-list-tile-content>
+						<v-list-tile-title>{{ userInfo.displayName }}</v-list-tile-title>
+					</v-list-tile-content>
+				</v-list-tile>
 			</v-list>
-		</v-menu>
-		
-		
-		<!-- User is logged in -->
-		<template v-if="$store.state.firebase.user">
-			<v-menu v-model="menu" :close-on-content-click="false" :nudge-width="200" offset-x>
-				<template v-slot:activator="{ on }">
-					<v-btn flat class="secondary" dark v-on="on" >
-						{{ userInfo.displayName }}
-					</v-btn>
-				</template>
 
+			<v-menu v-model="menu" absolute :close-on-content-click="false" :nudge-width="200" offset-x>
 				<v-card>
 					<v-list>
 						<v-list-tile avatar>
@@ -57,7 +67,7 @@
 							<v-list-tile-title><strong>Email: </strong> <span color="grey">{{ userInfo.email }}</span></v-list-tile-title>
 						</v-list-tile>
 					</v-list>
-					
+
 					<v-card-actions>
 						<v-spacer></v-spacer>
 
@@ -66,8 +76,27 @@
 					</v-card-actions>
 				</v-card>
 			</v-menu>
-		</template>
-    </v-toolbar>
+
+			<v-list class="pt-0" dense>
+				<v-divider></v-divider>
+
+				<v-list-tile
+					v-for="item in menuItems"
+					:key="item.title"
+					avatar
+					@click="$router.push(item.to)"
+				>
+					<!-- <v-list-tile-avatar>
+						<img src="https://cdn.vuetifyjs.com/images/lists/3.jpg">
+					</v-list-tile-avatar> -->
+
+					<v-list-tile-content>
+						<v-list-tile-title v-html="item.title"></v-list-tile-title>
+					</v-list-tile-content>
+					</v-list-tile>
+			</v-list>
+		</v-navigation-drawer>
+	</div>
 </template>
 
 <script>
@@ -75,10 +104,12 @@ export default {
     data(){
         return {
 			menu: false,
+			drawer: false,
 			menuItems:[
 				{title: 'Home', to: '/home'},
+				{title: 'Settings', to: '/settings'},
 				// {title: 'Feature Request', to: '/suggest'},
-			]
+			],
         }
     },
     computed:{
@@ -106,10 +137,18 @@ export default {
     methods:{
       // Logout current user
       logout(){
-		// this.$__firebase.fireauth.signOut().then(resp => {
-		// 	//this.$router.push({name: 'login', params: {msg: 'User Logged / Timed Out '}})
-		// }).catch();
 		this.$store.dispatch('signUserOut');
+	  },
+	  
+	  // Show profile menu
+	  showProfileMenu (e) {
+        e.preventDefault()
+        this.menu = false;
+        // this.x = e.clientX
+        // this.y = e.clientY
+        this.$nextTick(() => {
+          this.menu = true
+		});
       }
     }
 }
