@@ -2,7 +2,7 @@
 	<v-container>
 		<v-layout row wrap>
 			<v-flex xs12>
-				<v-select solo autofocus cache-items :items="dropDownItems" return-object item-text="title" label="Select one" @input="triggerNav"></v-select>
+				<v-select solo autofocus cache-items :items="dropDownItems" item-value="route" item-text="title" label="Select one" @input="triggerNav" v-model="currentRoute"></v-select>
 			</v-flex>
 
 			<v-flex xs12>
@@ -20,7 +20,10 @@ export default {
 	data(){
 		return {
 			// Check whether any data is changed or not
-			dataChanged: false
+			dataChanged: false,
+
+			// Current route path
+			currentRouteVal: null
 		}
 	},
 	computed:{
@@ -36,12 +39,22 @@ export default {
 			})
 
 			return [];
+		},
+
+		// Get current route
+		currentRoute:{
+			get(){
+				return this.$route.name;
+			},
+			set(val){
+				this.currentRouteVal = val;
+			}
 		}
 	},
 	methods:{
 		// Load the selected settings
-		triggerNav(obj = false){
-			this.$router.push({name: obj.route});
+		triggerNav(route = false){
+			this.$router.push({name: route});
 		}
 	},
 	mounted(){
