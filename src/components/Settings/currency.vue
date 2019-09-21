@@ -13,11 +13,9 @@
 				</v-card-title>
 				<v-card-text>
 					<v-list>
-						<v-list-item >
-							<v-text-field label="Search">
-
-							</v-text-field>
-						</v-list-item>
+						<v-list-tile>
+							<v-text-field label="Search currency" v-model="searchTxt" @input="searchCurrency"></v-text-field>
+						</v-list-tile>
 						<v-radio-group v-model="checkedCurrency" class="pa-0 ma-0">
 							<v-list-tile v-for="rate in currencyData" :key="rate.currency">
 									<v-list-tile-content >
@@ -35,7 +33,7 @@
 					<v-layout>
 						<v-flex xs12 class="text-xs-center">
 							<v-slide-y-reverse-transition>
-								<v-btn v-if="checkedCurrency" flat class="success mb-5" fixed absolute bottom>Save</v-btn>
+								<v-btn v-if="checkedCurrency" flat class="success mb-5" fixed absolute bottom @click="saveCurrency">Save</v-btn>
 							</v-slide-y-reverse-transition>
 						</v-flex>
 					</v-layout>
@@ -46,21 +44,40 @@
 </template>
 
 <script>
+import EventBus from '../../helpers/EventBus';
 const loader = () => import('../Loader');
 
 export default {
 	data(){
 		return {
 			currencyData:[],
-			checkedCurrency: null
+			checkedCurrency: null,
+			searchTxt: null
 		}
 	},
 	methods:{
 		// Get latest currency exchange price details
 		getCurrency(){
 			const doc = this.$__firebase.firestore.collection('master').doc('data').collection('currency');
-			doc.orderBy("currency", "asc").get().then(snapshot => {
-				//console.log(snapshot);
+			const UserDoc = this.$__firebase.firestore.collection('settings').doc(this.$__firebase.fireauth.currentUser.uid);
+
+			// Get user settings document
+			UserDoc.get().then(uData => {
+				let currency = null;
+				if(uData.exists){
+					const data = uData.data();
+					if(data && data.hasOwnProperty('currency')) currency = data.currency;
+				}
+
+				// Set current currency, if user has this value in database
+				this.checkedCurrency = currency;
+
+				// Get currency data from master document
+				return doc.orderBy("currency", "asc").get();
+
+			}).then(snapshot => {
+
+				// Add currency data to interface
 				if(!snapshot.empty){
 					snapshot.forEach(doc => {
 						const data = doc.data();
@@ -69,7 +86,42 @@ export default {
 						this.currencyData.push(data);
 					});
 				}
-			})
+
+			}).catch(err => {
+				this.$store.commit('setSnackMsg', err.message);
+			});
+		},
+
+		// Search currency
+		searchCurrency(){
+			if(!this.searchTxt) return false;
+
+			// Declare variables
+			let input, filter, list, item, txtValue;
+
+			input = this.searchTxt;
+			filter = input.toString().toUpperCase();
+
+			list = document.querySelectorAll('.v-input--radio-group__input div[role=listitem]');
+
+			if(list){
+				list.forEach(obj => {
+					item = obj.querySelector('label.v-label');
+					txtValue = item.textContent || item.innerText;
+
+					if (txtValue.toUpperCase().indexOf(filter) > -1) {
+						obj.style.display = "";
+					} else {
+						obj.style.display = "none";
+					}
+				});
+			}
+
+		},
+
+		// Save current currency
+		saveCurrency(){
+			EventBus.$emit('SettingSaveData', {currency: this.checkedCurrency});
 		}
 	},
 	components:{
