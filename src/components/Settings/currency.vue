@@ -1,9 +1,7 @@
 <template>
   <v-layout>
 	  <v-flex xs12>
-			<v-alert type="warning" v-if="currencyData.length == 0">
-			  No data found
-			</v-alert>
+			<loader v-if="currencyData.length == 0"></loader>
 
 			<v-card v-if="currencyData.length > 0">
 				<v-card-title>
@@ -11,32 +9,45 @@
 						<v-flex class="grow">
 							Select a base currency
 						</v-flex>
+					</v-layout>
+				</v-card-title>
+				<v-card-text>
+					<v-list>
+						<v-list-item >
+							<v-text-field label="Search">
 
-						<v-flex class="shrink" >
+							</v-text-field>
+						</v-list-item>
+						<v-radio-group v-model="checkedCurrency" class="pa-0 ma-0">
+							<v-list-tile v-for="rate in currencyData" :key="rate.currency">
+									<v-list-tile-content >
+										<v-radio
+											:label="`${rate.currency}  ( ${rate.name} -- ${rate.symbol} )`"
+											:value="rate.currency"
+										></v-radio>
+									</v-list-tile-content>
+							</v-list-tile>
+						</v-radio-group>
+					</v-list>
+				</v-card-text>
+
+				<v-card-actions>
+					<v-layout>
+						<v-flex xs12 class="text-xs-center">
 							<v-slide-y-reverse-transition>
-								<v-btn v-if="checkedCurrency" flat class="success">Save</v-btn>
+								<v-btn v-if="checkedCurrency" flat class="success mb-5" fixed absolute bottom>Save</v-btn>
 							</v-slide-y-reverse-transition>
 						</v-flex>
 					</v-layout>
-				</v-card-title>
-				<v-list>
-					<v-radio-group v-model="checkedCurrency" class="pa-0 ma-0">
-						<v-list-tile v-for="rate in currencyData" :key="rate.currency">
-								<v-list-tile-content >
-									<v-radio
-										:label="`${rate.currency}  ( ${rate.name} -- ${rate.symbol} )`"
-										:value="rate.currency"
-									></v-radio>
-								</v-list-tile-content>
-						</v-list-tile>
-					</v-radio-group>
-				</v-list>
+				</v-card-actions>
 			</v-card>
 	  </v-flex>
   </v-layout>
 </template>
 
 <script>
+const loader = () => import('../Loader');
+
 export default {
 	data(){
 		return {
@@ -60,6 +71,9 @@ export default {
 				}
 			})
 		}
+	},
+	components:{
+		loader
 	},
 	mounted(){
 		this.getCurrency();
