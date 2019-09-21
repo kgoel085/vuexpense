@@ -36,7 +36,7 @@ export default {
 			const {children: childRoutes} = routes[0]; 
 
 			return childRoutes.map(obj => {
-				const routeName = obj.name.split('.').pop().replace(/\b\w/g, l => l.toUpperCase());
+				const routeName = obj.name.split('.').pop().replace(/\b\w/g, l => l.toUpperCase()).replace('_', ' ');
 				return {route: obj.name, title: routeName};
 			})
 

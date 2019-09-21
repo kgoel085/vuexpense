@@ -72,6 +72,11 @@ const router = new Router({
 				path: '/currency',
 				name: 'settings.currency',
 				component: () => import('./components/Settings/currency.vue')
+			},
+			{
+				path: '/dateformat',
+				name: 'settings.date_format',
+				component: () => import('./components/Settings/dateformat.vue')
 			}
 		]
 	}
