@@ -1,19 +1,52 @@
 <template>
 	<v-layout row wrap>
-		<v-flex xs12 v-for="(item, indx) in items" :key="indx">
-			<v-select outline autofocus :items="item.items" item-text="text" item-value="value" :label="item.title"></v-select>
-		</v-flex>
+		<template v-if="loading">
+			<loader></loader>
+		</template>
+		<template v-else>
+			<v-flex xs12 v-for="(item, indx) in items" :key="indx">
+				<v-select outline autofocus :items="item.items" item-text="text" item-value="value" :label="item.title" v-model="formFields[indx]"></v-select>
+			</v-flex>
+			<v-flex xs12 class="text-xs-center">
+				<v-btn flat bottom fixed class="success" @click="saveFormat">Save</v-btn>
+			</v-flex>
+		</template>
 	</v-layout>
 </template>
 
 <script>
+import EventBus from '../../helpers/EventBus';
+const loader = () => import('../Loader');
+
 export default {
 	data(){
 		return {
-			
+			// Form Data
+			formFields:{
+				// Format
+				dateFormat: null,
+				firstMonth: null,
+				firstDay: null
+			},
+
+			loading: false
 		}
 	},
+	components: {
+		loader
+	},
 	computed:{
+		// Format settings master doc
+		FormatDoc(){
+			return this.$__firebase.firestore.collection('master').doc('data').collection('format');
+		},
+
+		// Format settings user doc
+		UserFormatSettingDoc(){
+			return this.$__firebase.firestore.collection('settings').doc(this.$__firebase.fireauth.currentUser.uid);
+		},
+
+		// Layout fields
 		items(){
 			let returnObj = {};
 
@@ -45,9 +78,9 @@ export default {
 
 			// Stores all the formats
 			if(dateFormats.length > 0){
-				returnObj.format = {
+				returnObj.dateFormat = {
 					items: dateFormats,
-					title: 'Date format'
+					title: 'Date format',
 				}
 			}
 
@@ -57,6 +90,7 @@ export default {
 
 			firstElems.forEach(obj => {
 				let title = 'day', items
+				let fieldValue = null;
 
 				switch(obj){
 					case 'Year':
@@ -68,6 +102,8 @@ export default {
 						for(let i = 0; i < 12; i++){
 							items.push({text: monthNames[i], value: i});
 						}
+
+						fieldValue = 'firstMonth';
 					break;
 
 					case 'Month':
@@ -76,6 +112,8 @@ export default {
 						for(let i = 1; i <= 31; i++){
 							items.push({text: i, value: i});
 						}
+
+						fieldValue = 'firstDay';
 					break;
 
 					case 'Week':
@@ -85,13 +123,71 @@ export default {
 						for(let i = 0; i < 7; i++){
 							items.push({text: days[i], value: i});
 						}
+
+						
 					break;
 				}
-				returnObj[obj] = {items, title: `First ${title} of ${obj}`};
+
+				if(fieldValue) returnObj[fieldValue] = {items, title: `First ${title} of ${obj}`};
 			});
 
 			return returnObj;
 		}
+	},
+	methods:{
+		// Get master / user saved data from DB
+		getData(){
+			this.loading = true;
+
+			// First check for user saved data
+			this.UserFormatSettingDoc.get().then(doc => {
+				if(doc.exists){
+					const {format: data} = doc.data();
+					Object.keys(data).forEach(key => {
+						if(this.formFields.hasOwnProperty(key)) this.formFields[key] = data[key];
+					});
+
+					return this.FormatDoc.get();
+				}
+
+				return false;
+			}).then(masterData => {
+				// Replace empty values with default values
+				if(masterData || !masterData.empty){
+					masterData.forEach(doc => {
+						const data = doc.data();
+						Object.keys(data).forEach(key => {
+							if(this.formFields.hasOwnProperty(key) && !this.formFields[key]) this.formFields[key] = data[key];
+						});
+					});
+					this.loading = false;
+				}
+
+				this.loading = false;
+			}).catch(err => {
+				this.$store.commit('setSnackMsg', err.message);
+				this.loading = false;
+			});
+		},
+
+		//Save data to DB
+		saveFormat(){
+			const data = {};
+
+			Object.keys(this.formFields).forEach(obj => {
+				const field = this.formFields[obj];
+				data[obj] = field
+			});
+
+			if(data.dateFormat) data.separator = data.dateFormat.split('')[1];
+
+			if(Object.keys(data).length > 0){
+				EventBus.$emit('SettingSaveData', {format: data});
+			}
+		}
+	},
+	mounted(){
+		this.getData();
 	}
 }
 </script>
