@@ -7,7 +7,7 @@
 				<v-card-title>
 					<v-layout row wrap>
 						<v-flex class="grow">
-							Select a base currency
+							Select a base currency <strong><h2>{{ checkedCurrency }}</h2></strong>
 						</v-flex>
 					</v-layout>
 				</v-card-title>
