@@ -2,7 +2,7 @@
 	<v-layout row wrap>
 		<v-flex xs12>
 			<loader v-if="dataArr.length == 0"></loader>
-
+			
 			<v-card flat v-else>
 				<v-card-text>
 					<v-text-field label="Search types" v-model="searchTxt" @input="searchTypes"></v-text-field>
@@ -15,9 +15,9 @@
 									</v-flex>
 									<v-flex class="shrink">
 										<v-switch
-										color="primary"
-											v-model="item.active"
-											@change="setDelValues"
+											color="primary"
+											v-model="selectedArr[item.id]['active']"
+											@change="setDelValues(item.id)"
 										></v-switch>
 									</v-flex>
 								</v-layout>
@@ -26,7 +26,7 @@
 							<v-card>
 								<v-card-text>
 									<v-list>
-										<v-list-tile v-for="dataItem in item.data" :key="dataItem.id">
+										<v-list-tile v-for="(dataItem, indx) in item.data" :key="dataItem.id">
 											<v-list-tile-content>
 												<v-list-tile-title>{{ dataItem.title }}</v-list-tile-title>
 											</v-list-tile-content>
@@ -34,7 +34,8 @@
 											<v-list-tile-action>
 												<v-switch
 													color="secondary"
-													v-model="dataItem.active"
+													v-model="selectedArr[item.id]['data'][indx]"
+													@change="setDelValues(item.id)"
 												></v-switch>
 											</v-list-tile-action>
 										</v-list-tile>
@@ -57,6 +58,7 @@ export default {
 	data(){
 		return{
 			dataArr: [],
+			selectedArr: {},
 			searchTxt: null
 		}		
 	},
@@ -66,28 +68,32 @@ export default {
 	computed:{
 		// Master data
 		MasterDoc(){
-			return this.$__firebase.firestore.collection('master').doc('data').collection('expense_category').orderBy('title', 'asc');
+			return this.$__firebase.firestore.collection('master').doc('data').collection('expense_category');
 		}
 	},
 	methods:{
 		// Get master data
-		getMasterData(){
-			this.MasterDoc.get().then(snapshot => {
+		getMasterData(refresh = false){
+			if(refresh) this.dataArr = [];
+
+			this.MasterDoc.orderBy('title', 'asc').get().then(snapshot => {
 				if(!snapshot.empty){
 					snapshot.forEach(doc => {
 						if(doc.exists){
+							let newModelObj = {};
 							const docData = doc.data();
 							docData.id = doc.id;
-							docData.active = (docData.del) ? false : true;
+							newModelObj = {active : (docData.del) ? false : true, data: {}};
 
-							docData.data = docData.data.map(obj => {
-								obj.active = (obj.del) ? false : true;
+							docData.data = docData.data.map((obj, key) => {
+								newModelObj['data'][key] = (obj.del) ? false : true;
 								return {...obj};
 							});
 
+							this.selectedArr[docData.id] = newModelObj;
 							this.dataArr.push(docData);
 						}
-					})
+					});
 				}
 			}).catch(err => {
 				this.$store.commit('setSnackMsg', err.message)
@@ -96,7 +102,13 @@ export default {
 
 		// Search specific types
 		searchTypes(){
-			if(!this.searchTxt) return false;
+			if(!this.searchTxt){
+				let list = document.querySelectorAll('li.v-expansion-panel__container');
+				list = Array.from(list);
+
+				list.forEach(obj => obj.style.display = "");
+				return false;
+			}
 
 			// Declare variables
 			let input, filter, list, item, txtValue;
@@ -105,6 +117,7 @@ export default {
 			filter = input.toString().toUpperCase();
 
 			list = document.querySelectorAll('li.v-expansion-panel__container');
+			list = Array.from(list);
 
 			if(list){
 				list.forEach(obj => {
@@ -120,8 +133,33 @@ export default {
 			}
 		},
 
-		setDelValues(val){
-			console.log(val);
+		// Store the saved data
+		setDelValues(id){
+			const catObj = this.dataArr.find(obj => obj.id === id);
+			let saveObj = {...catObj};
+
+			// Stores the current model value
+			const valObj = this.selectedArr[id];
+
+			saveObj.del = !valObj['active'];
+
+			saveObj.data = saveObj.data.map((obj, key) => {
+				obj.del = !valObj['data'][key];
+
+				if(saveObj.del) obj.del = saveObj.del;
+				else obj.del = !valObj['data'][key];
+				 
+				return obj;
+			});
+
+			delete saveObj.id;
+
+			this.MasterDoc.doc(id).set(saveObj).then(result => {
+				this.$store.commit('setSnackMsg', 'Data update success');
+				//this.getMasterData(true);
+			}).catch(err => {
+				this.$store.commit('setSnackMsg', err.message);
+			})
 		}
 	},
 	mounted(){
