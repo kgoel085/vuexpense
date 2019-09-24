@@ -32,8 +32,8 @@ export default {
 		// Settings drop-down
 		dropDownItems(){
 			// Get all child routes from router settings childs
-			const routes = this.$router.options.routes.filter(route => route.name === 'settings');
-			const {children: childRoutes} = routes[0]; 
+			const routes = this.$router.options.routes.find(obj => obj.path == '/settings');
+			const {children: childRoutes} = routes; 
 
 			return childRoutes.map(obj => {
 				const routeName = obj.name.split('.').pop().replace(/\b\w/g, l => l.toUpperCase()).replace('_', ' ');
