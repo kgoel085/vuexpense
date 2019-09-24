@@ -35,8 +35,9 @@ export default {
 			const routes = this.$router.options.routes.find(obj => obj.path == '/settings');
 			const {children: childRoutes} = routes; 
 
-			return childRoutes.map(obj => {
-				const routeName = obj.name.split('.').pop().replace(/\b\w/g, l => l.toUpperCase()).replace('_', ' ');
+			// Filter out those options tht should not be shown as options
+			return childRoutes.filter(obj => obj.showAsOption !== false).map(obj => {
+				const routeName = obj.name.split('.').pop().replace(/\b\w/g, l => l.toUpperCase()).replace(/_/g, ' ');
 				return {route: obj.name, title: routeName};
 			})
 

@@ -9,7 +9,18 @@
 					<v-expansion-panel>
 						<v-expansion-panel-content v-for="item in dataArr" :key="item.id">
 							<template v-slot:header>
-								<div>{{item.title}}</div>
+								<v-layout row wrap>
+									<v-flex class="grow">
+										{{item.title}}
+									</v-flex>
+									<v-flex class="shrink">
+										<v-switch
+										color="primary"
+											v-model="item.active"
+											@change="setDelValues"
+										></v-switch>
+									</v-flex>
+								</v-layout>
 							</template>
 
 							<v-card>
@@ -22,6 +33,7 @@
 
 											<v-list-tile-action>
 												<v-switch
+													color="secondary"
 													v-model="dataItem.active"
 												></v-switch>
 											</v-list-tile-action>
@@ -66,6 +78,7 @@ export default {
 						if(doc.exists){
 							const docData = doc.data();
 							docData.id = doc.id;
+							docData.active = (docData.del) ? false : true;
 
 							docData.data = docData.data.map(obj => {
 								obj.active = (obj.del) ? false : true;
@@ -105,6 +118,10 @@ export default {
 					}
 				});
 			}
+		},
+
+		setDelValues(val){
+			console.log(val);
 		}
 	},
 	mounted(){

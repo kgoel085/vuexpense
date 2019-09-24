@@ -82,6 +82,12 @@ const router = new Router({
 				path: '/expense',
 				name: 'settings.expense_types',
 				component: () => import('./components/Settings/expense.vue')
+			},
+			{
+				path: '/expense/manage',
+				name: 'settings.manage_expense_types',
+				component: () => import('./components/Settings/manageExpense.vue'),
+				showAsOption: false
 			}
 		]
 	}
