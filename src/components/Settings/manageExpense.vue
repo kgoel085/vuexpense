@@ -32,6 +32,18 @@
 							<v-flex xs12>
 								<v-select :items="dataArr" item-text="title" item-value="id" v-model="selectedCat"></v-select>
 							</v-flex>
+							<v-flex xs12>
+								<template v-if="!selectedCatChild">
+									No Category selected
+								</template>
+								<template v-else>
+									<v-list>
+										<v-list-tile v-for="item in selectedCatChild" :key="item.id" class="ma-1">
+												<v-text-field solo v-model="item.title" full-width ></v-text-field>
+										</v-list-tile>
+									</v-list>
+								</template>
+							</v-flex>
 						</v-layout>
 					</template>
 				</v-card-text>
@@ -49,7 +61,14 @@ export default {
 		return {
 			dataArr: [],
 			loading: false,
-			selectedCat: null
+			selectedCat: null,
+			selectedCatChild: null
+		}
+	},
+	watch:{
+		selectedCat(val){
+			const findObj = this.dataArr.find(obj => obj.id === val);
+			this.selectedCatChild = (findObj.hasOwnProperty('data')) ? findObj.data : null;
 		}
 	},
 	components:{
