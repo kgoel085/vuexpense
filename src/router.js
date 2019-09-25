@@ -88,7 +88,12 @@ const router = new Router({
 				name: 'settings.manage_expense_types',
 				component: () => import('./components/Settings/manageExpense.vue'),
 				showAsOption: false
-			}
+			},
+			{
+				path: '/income',
+				name: 'settings.income_types',
+				component: () => import('./components/Settings/income.vue')
+			},
 		]
 	}
   ]
