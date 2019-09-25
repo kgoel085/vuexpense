@@ -47,6 +47,10 @@
 				</v-card-text>
 			</v-card>
 		</v-flex>
+
+		<v-flex xs12 class="text-xs-center">
+			<v-btn flat fixed bottom class="primary" @click="$router.push({name: 'settings.manage_expense_types'});"> Manage Categories </v-btn>
+		</v-flex>
 	</v-layout>
 </template>
 
