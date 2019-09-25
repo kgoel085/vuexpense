@@ -146,7 +146,7 @@ export default {
 			saveObj.data = saveObj.data.map((obj, key) => {
 				obj.del = !valObj['data'][key];
 
-				if(saveObj.del) obj.del = saveObj.del;
+				if(obj.del && !saveObj.del) obj.del = false;
 				else obj.del = !valObj['data'][key];
 				 
 				return obj;
