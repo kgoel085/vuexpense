@@ -92,7 +92,26 @@ const router = new Router({
 			{
 				path: '/income',
 				name: 'settings.income_types',
-				component: () => import('./components/Settings/income.vue')
+				props: true,
+				component: () => import('./components/Settings/manageList.vue')
+			},
+			{
+				path: '/payee',
+				name: 'settings.payees',
+				props: {pgType: 'payee_list'},
+				component: () => import('./components/Settings/manageList.vue')
+			},
+			{
+				path: '/payer',
+				name: 'settings.payers',
+				props: {pgType: 'payer_list'},
+				component: () => import('./components/Settings/manageList.vue')
+			},
+			{
+				path: '/payments',
+				name: 'settings.payment_methods',
+				props: {pgType: 'payment_methods'},
+				component: () => import('./components/Settings/manageList.vue')
 			},
 		]
 	}

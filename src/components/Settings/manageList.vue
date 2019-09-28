@@ -5,14 +5,14 @@
 				<v-card-title>
 					<v-layout row wrap>
 						<v-flex class="grow">
-							<h2>Manage Income Types: </h2>
+							<h2>Manage {{PgTitle}}: </h2>
 						</v-flex>
 						<v-flex class="shrink">
 							<loader class="ma-0" v-if="loading"></loader>
 						</v-flex>
 					</v-layout>
 				</v-card-title>
-				<v-card-text>
+				<v-card-text :key="PgType">
 					<v-layout row wrap>
 						<v-flex xs12>
 							<v-text-field label="Add item" v-model="newItem" :append-icon="newItem ? 'add_circle' : ''" @click:append="addNewItem"></v-text-field>
@@ -61,9 +61,24 @@ export default {
 		loader
 	},
 	computed:{
+		// Set Page DB settings based on props
+		PgType(){
+			return this.pgType;
+		},
+
+		// Title
+		PgTitle(){
+			// Get all child routes from router settings child's
+			let {name} = this.$route;
+			name = name.split('.').pop().replace(/\b\w/g, l => l.toUpperCase()).replace(/_/g, ' ');
+
+			return name;
+		},
+
 		// Master doc
 		MasterDoc(){
-			return this.$__firebase.firestore.collection('master').doc('data').collection('income_category');
+			const dbCol = this.PgType;
+			return this.$__firebase.firestore.collection('master').doc('data').collection(dbCol);
 		},
 	},
 	methods:{
@@ -131,7 +146,12 @@ export default {
 		}
 	},
 	mounted(){
-		this.getData();
+		this.getData(true);
+	},
+	props:{
+		pgType:{
+			default: 'income_category'
+		}
 	}
 }
 </script>

@@ -8,7 +8,7 @@
 
 			<v-flex xs12>
 				<!-- Settings router view -->
-				<router-view></router-view>
+				<router-view :key="currentRouteVal"></router-view>
 			</v-flex>
 
 		</v-layout>
