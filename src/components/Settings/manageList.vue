@@ -78,7 +78,8 @@ export default {
 		// Master doc
 		MasterDoc(){
 			const dbCol = this.PgType;
-			return this.$__firebase.firestore.collection('master').doc('data').collection(dbCol);
+			return this.$__firebase.firestore.collection('settings').doc(this.$__firebase.fireauth.currentUser.uid).collection(dbCol);
+			//return this.$__firebase.firestore.collection('master').doc('data').collection(dbCol); // Master data collection
 		},
 	},
 	methods:{

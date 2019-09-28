@@ -78,16 +78,16 @@ const router = new Router({
 				name: 'settings.date_format',
 				component: () => import('./components/Settings/dateformat.vue')
 			},
+			// {
+			// 	path: '/expense',
+			// 	name: 'settings.expense_types',
+			// 	component: () => import('./components/Settings/expense.vue')
+			// },
 			{
 				path: '/expense',
 				name: 'settings.expense_types',
-				component: () => import('./components/Settings/expense.vue')
-			},
-			{
-				path: '/expense/manage',
-				name: 'settings.manage_expense_types',
 				component: () => import('./components/Settings/manageExpense.vue'),
-				showAsOption: false
+				//showAsOption: false
 			},
 			{
 				path: '/income',
