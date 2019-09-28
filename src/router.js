@@ -113,6 +113,18 @@ const router = new Router({
 				props: {pgType: 'payment_methods'},
 				component: () => import('./components/Settings/manageList.vue')
 			},
+			{
+				path: '/status',
+				name: 'settings.status',
+				props: {pgType: 'entry_status'},
+				component: () => import('./components/Settings/manageList.vue')
+			},
+			{
+				path: '/tags',
+				name: 'settings.tags',
+				props: {pgType: 'entry_tags'},
+				component: () => import('./components/Settings/manageList.vue')
+			},
 		]
 	}
   ]
