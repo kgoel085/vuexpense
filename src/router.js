@@ -62,7 +62,71 @@ const router = new Router({
       path: '/suggest',
       name: 'suggest',
       component: () => import('./views/Suggestions.vue')
-    }
+	},
+	{
+		path: '/settings',
+		name: 'settings',
+		component: () => import('./views/Settings.vue'),
+		children:[
+			{
+				path: '/currency',
+				name: 'settings.currency',
+				component: () => import('./components/Settings/currency.vue')
+			},
+			{
+				path: '/dateformat',
+				name: 'settings.date_format',
+				component: () => import('./components/Settings/dateformat.vue')
+			},
+			// {
+			// 	path: '/expense',
+			// 	name: 'settings.expense_types',
+			// 	component: () => import('./components/Settings/expense.vue')
+			// },
+			{
+				path: '/expense',
+				name: 'settings.expense_types',
+				component: () => import('./components/Settings/manageExpense.vue'),
+				//showAsOption: false
+			},
+			{
+				path: '/income',
+				name: 'settings.income_types',
+				props: true,
+				component: () => import('./components/Settings/manageList.vue')
+			},
+			{
+				path: '/payee',
+				name: 'settings.payees',
+				props: {pgType: 'payee_list'},
+				component: () => import('./components/Settings/manageList.vue')
+			},
+			{
+				path: '/payer',
+				name: 'settings.payers',
+				props: {pgType: 'payer_list'},
+				component: () => import('./components/Settings/manageList.vue')
+			},
+			{
+				path: '/payments',
+				name: 'settings.payment_methods',
+				props: {pgType: 'payment_methods'},
+				component: () => import('./components/Settings/manageList.vue')
+			},
+			{
+				path: '/status',
+				name: 'settings.status',
+				props: {pgType: 'entry_status'},
+				component: () => import('./components/Settings/manageList.vue')
+			},
+			{
+				path: '/tags',
+				name: 'settings.tags',
+				props: {pgType: 'entry_tags'},
+				component: () => import('./components/Settings/manageList.vue')
+			},
+		]
+	}
   ]
 });
 
