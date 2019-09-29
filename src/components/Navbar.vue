@@ -107,6 +107,7 @@ export default {
 			drawer: false,
 			menuItems:[
 				{title: 'Home', to: '/home'},
+				{title: 'Add expense / income', to: '/manager'},
 				{title: 'Settings', to: '/settings'},
 				// {title: 'Feature Request', to: '/suggest'},
 			],
