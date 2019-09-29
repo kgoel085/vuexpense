@@ -21,20 +21,29 @@
           Close
       </v-btn>
     </v-snackbar>
+
+	<!-- Show calculator -->
+	<v-dialog v-model="showCalc" hide-overlay width="40%">
+		<Calculator></Calculator>
+	</v-dialog>
   </v-app>
 </template>
 
 <script>
 import Navbar from './components/Navbar';
+import Calculator from './components/Calculator';
+import EventBus from './helpers/EventBus';
 
 export default {
   name: 'App',
   components: {
-    Navbar
+	Navbar,
+	Calculator
   },
   data () {
     return {
-      snackbarShow: false
+	  snackbarShow: false,
+	  showCalc: false
     }
   },
   watch:{
@@ -56,6 +65,11 @@ export default {
       }
       return null;
     }
+  },
+  mounted(){
+	EventBus.$on('showCalc', (stat = false) => {
+		this.showCalc = stat
+	});
   }
 }
 </script>

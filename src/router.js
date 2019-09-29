@@ -59,9 +59,19 @@ const router = new Router({
       component: () => import('./views/User.vue')
     },
     {
+      path: '/manager',
+      name: 'manager',
+      component: () => import('./views/Manager.vue')
+    },
+    {
       path: '/suggest',
       name: 'suggest',
       component: () => import('./views/Suggestions.vue')
+	},
+	{
+		path: '/calculator',
+		name: 'calculator',
+		component: () => import('./components/Calculator.vue')
 	},
 	{
 		path: '/settings',
