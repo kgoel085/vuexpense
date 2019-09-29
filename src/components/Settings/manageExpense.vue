@@ -7,6 +7,39 @@
 						<v-flex class="grow">
 							<v-text-field full-width outline label="Add category" v-model="newCategory" :disabled="(dataArr.length == 0) ? true : false" :append-icon="newCategory ? 'add_circle' : ''"  @click:append="addNewCategory"></v-text-field>
 						</v-flex>
+						<v-flex xs12>
+							<v-layout row wrap>
+								<v-flex class="grow">
+									<h2>Manage Category</h2>
+								</v-flex>
+								<v-flex class="shrink">
+									<loader v-if="loading" class="pa-0 ma-0"></loader>
+								</v-flex>	
+							</v-layout>
+						</v-flex>
+						<v-flex xs12 >
+							<v-card flat>
+								<template v-if="dataArr.length == 0">
+									<v-alert type="warning" :value="true">
+										No data found
+									</v-alert>
+								</template>
+								<template v-else>
+									<v-card-text>
+										<v-flex xs12 v-for="item in dataArr" :key="item.id" class="ma-1">
+											<v-layout row wrap>
+												<v-flex class="grow">
+													<v-text-field single-line v-model="item.title" :append-icon="(item.title) ? 'save': ''"  @click:append="updateCategory(item)"></v-text-field>
+												</v-flex>
+												<v-flex class="shrink pa-1">
+													<v-switch v-model="item.del" :label="`Currently ${(!item.del) ? 'active' : 'inactive'}`" @change="updateCategory(item)"></v-switch>
+												</v-flex>
+											</v-layout>
+										</v-flex>
+									</v-card-text>
+								</template>
+							</v-card>
+						</v-flex>
 					</v-layout>
 				</v-card-text>
 			</v-card>
@@ -14,7 +47,7 @@
 				<v-card-title >
 					<v-layout row wrap>
 						<v-flex class="grow">
-							<h2>Manage Categories</h2>
+							<h2>Manage Category items</h2>
 						</v-flex>
 						<v-flex class="shrink">
 							<loader v-if="loading" class="pa-0 ma-0"></loader>
@@ -42,7 +75,14 @@
 											<v-text-field type="text" label="Add new item" outline v-model="newItem" full-width :append-icon="newItem ? 'add_circle' : ''" @click:append="addNewItem"></v-text-field>
 										</v-flex>
 										<v-flex xs12 v-for="item in selectedCatChild" :key="item.id" class="ma-1">
-											<v-text-field single-line type="text" outline v-model="item.title" full-width @input="item.dirty = true"></v-text-field>
+											<v-layout row wrap>
+												<v-flex class="grow">
+													<v-text-field single-line v-model="item.title" :append-icon="(item.title) ? 'save': ''"  @click:append="updateChild(item)"></v-text-field>
+												</v-flex>
+												<v-flex class="shrink pa-1">
+													<v-switch v-model="item.del" :label="`Currently ${(!item.del) ? 'active' : 'inactive'}`" @change="updateChild(item)"></v-switch>
+												</v-flex>
+											</v-layout>
 										</v-flex>
 									</v-layout>
 								</template>
@@ -50,17 +90,6 @@
 						</v-layout>
 					</template>
 				</v-card-text>
-				<v-card-actions>
-					<v-layout row wrap>
-						<v-flex xs12 class="text-xs-center">
-							<v-slide-y-transition>
-								<v-btn flat class="primary" fixed bottom v-if="showUpdateBtn && selectedCatChild" @click="updateChild">
-									Update
-								</v-btn>
-							</v-slide-y-transition>
-						</v-flex>
-					</v-layout>
-				</v-card-actions>
 			</v-card>
 		</v-flex>
 	</v-layout>
@@ -77,17 +106,8 @@ export default {
 			dataArr: [],
 			loading: false,
 			selectedCat: null,
-			selectedCatChild: null,
 			newItem: null,
 			newCategory: null
-		}
-	},
-	watch:{
-		selectedCat(val){
-			if(val) this.selectedCatChild = null;
-
-			const findObj = this.dataArr.find(obj => obj.id === val);
-			this.selectedCatChild = (findObj && findObj.hasOwnProperty('data')) ? findObj.data : null;
 		}
 	},
 	components:{
@@ -96,35 +116,37 @@ export default {
 	computed:{
 		// Master data
 		MasterDoc(){
-			return this.$__firebase.firestore.collection('master').doc('data').collection('expense_category');
+			return this.$__firebase.firestore.collection('settings').doc(this.$__firebase.fireauth.currentUser.uid).collection('expense_category');
+			// return this.$__firebase.firestore.collection('master').doc('data').collection('expense_category');
 		},
 
-		// Show update button for category child's
-		showUpdateBtn(){
-			let returnVal = false;
-			if(this.selectedCatChild){
-				for(let obj of this.selectedCatChild){
-					if(obj.dirty){
-						returnVal = true;
-						break;
-					}
-				}
+		// Selected Category child items
+		selectedCatChild(){
+			if(this.selectedCat){
+				const val = this.selectedCat;
+				const findObj = this.dataArr.find(obj => obj.id === val);
+				const catChild = (findObj && findObj.hasOwnProperty('data')) ? findObj.data : null;
+
+				return (catChild) ? catChild: null;
 			}
 
-			return returnVal;
+			return null;
 		}
 	},
 	methods:{
 		// Get master data
-		getData(refresh = false){
-			if(refresh){
-				this.selectedCat = null;
-				this.dataArr = [];
-			}
-
+		getData(refresh = false, selCat = false){
 			this.loading = true;
 			this.MasterDoc.orderBy('title', 'asc').get().then(snapshot => {
 				if(!snapshot.empty){
+
+					// Reset the prev. stored data
+					if(refresh){
+						this.selectedCat = null;
+						// this.selectedCatChild = null;
+						this.dataArr = [];
+					}
+
 					snapshot.forEach(doc => {
 						if(doc.exists){
 							const data = doc.data();
@@ -139,6 +161,7 @@ export default {
 						}
 					});
 					this.loading = false;
+					if(selCat) this.selectedCat = selCat;
 				}
 				//this.loading = false;
 			}).catch(err => {
@@ -213,6 +236,22 @@ export default {
 			})
 		},
 
+		// Update current selected category
+		updateCategory(item = false){
+			if(!item) return false;
+
+			this.loading = true;
+			const categoryDoc = this.MasterDoc.doc(item.id);
+			categoryDoc.update(item).then(result => {
+				this.getData(true);
+				this.$store.commit('setSnackMsg', 'Update success');
+				this.loading = false;
+			}).catch(err => {
+				this.loading = false;
+				this.$store.commit('setSnackMsg', err.message);
+			});
+		},
+
 		// Update current category child's 
 		updateChild(){
 			let catChild = this.selectedCatChild;
@@ -227,7 +266,7 @@ export default {
 				categoryDoc.update({
 					data: catChild
 				}).then(result => {
-					this.getData(true);
+					this.getData(true, this.selectedCat);
 					this.$store.commit('setSnackMsg', 'Update success');
 					this.loading = false;
 				}).catch(err => {
