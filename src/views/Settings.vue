@@ -81,8 +81,8 @@ export default {
 					const data = doc.data();
 					if(data) userSettings = {...data};
 				}
-
-				if(Object.keys(userSettings).length > 0){
+				
+				if(Object.keys(userSettings).length > 0 || Object.keys(newData).length > 0){
 					const updateData = {...userSettings, ...newData};
 					return UserDoc.set(updateData);
 				}
