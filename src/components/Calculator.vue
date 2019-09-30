@@ -116,12 +116,12 @@ export default {
 			this.value = this.value.slice(0, -1);
 		},
 		setResults(){
-			if(this.value){
+			//if(this.value){
 				EventBus.$emit('calcResults', this.value);
 				EventBus.$emit('showCalc', false);
 				this.$store.commit('setNav', true);
 				this.clear();
-			}
+			//}
 		}
 	},
 	created(){
