@@ -14,8 +14,11 @@
 				</v-card-title>
 				<v-card-text :key="PgType">
 					<v-layout row wrap>
-						<v-flex xs12>
-							<v-text-field label="Add item" v-model="newItem" :append-icon="newItem ? 'add_circle' : ''" @click:append="addNewItem"></v-text-field>
+						<v-flex class="grow pa-1">
+							<v-text-field label="Add item" v-model="newItem" :append-icon="newItem ? 'add_circle' : ''" @click:append="addNewItem" @keyup.native.enter="addNewItem"></v-text-field>
+						</v-flex>
+						<v-flex class="shrink pa-1" >
+							<v-select v-model="filter" :items="filterArr" item-text="text" item-value="value" label='Filter records' @input="getData(true)"></v-select>
 						</v-flex>
 
 						<v-flex xs12>
@@ -29,7 +32,7 @@
 									<v-flex xs12 v-for="item in dataArr" :key="item.id">
 										<v-layout row wrap>
 											<v-flex class="grow">
-												<v-text-field single-line v-model="item.title" :append-icon="(item.title) ? 'save': ''"  @click:append="updateItem(item)"></v-text-field>
+												<v-text-field single-line v-model="item.title" :append-icon="(item.title) ? 'save': ''"  @click:append="updateItem(item)" @keyup.native.enter="updateItem(item)"></v-text-field>
 											</v-flex>
 											<v-flex class="shrink pa-1">
 												<v-switch v-model="item.del" :label="`Currently ${(!item.del) ? 'active' : 'inactive'}`" @change="updateItem(item)"></v-switch>
@@ -54,7 +57,12 @@ export default {
 		return {
 			dataArr: [],
 			loading: false,
-			newItem: null
+			newItem: null,
+			filter: false,
+			filterArr: [
+				{text: 'Active', value: false},
+				{text: 'Inactive', value: true},
+			]
 		}
 	},
 	components:{
@@ -88,7 +96,7 @@ export default {
 			if(refresh) this.dataArr = [];
 
 			this.loading = true;
-			this.MasterDoc.orderBy('title', 'asc').get().then(snapShot => {
+			this.MasterDoc.orderBy('title', 'asc').where('del', '==', (this.filter) ? this.filter : false).get().then(snapShot => {
 				if(!snapShot.empty){
 					snapShot.forEach(doc => {
 						const data = doc.data();
@@ -125,7 +133,7 @@ export default {
 			}).then(result => {
 				this.$store.commit('setSnackMsg', 'Item add success');
 				this.newItem = null;
-				this.getData();
+				this.getData(true);
 			}).catch(err => {
 				this.$store.commit('setSnackMsg', err.message)
 			})
@@ -138,7 +146,7 @@ export default {
 			this.loading = true;
 			itemDoc.set(item).then(result => {
 				this.$store.commit('setSnackMsg', 'Item update success');
-				this.getData();
+				this.getData(true);
 				this.loading = false;
 			}).catch(err => {
 				this.$store.commit('setSnackMsg', err.message);
