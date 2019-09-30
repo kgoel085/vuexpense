@@ -157,9 +157,13 @@ export default {
 	mounted(){
 		this.getData(true);
 	},
+	beforeDestroy(){
+		this.dataArr = [];
+
+	},
 	props:{
 		pgType:{
-			default: 'income_category'
+			default: 'income_types'
 		}
 	}
 }
