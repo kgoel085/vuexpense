@@ -116,7 +116,8 @@ export default {
     computed:{
       // Show / Hide navbar 
         show(){
-            return this.$store.state.global.showNav;
+            //return this.$store.state.global.showNav;
+            return true;
 		},
 
 		// Returns user object
