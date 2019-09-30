@@ -1,13 +1,16 @@
 <template>
 	<v-container>
 		<v-layout row wrap>
+			<v-flex xs12>
+				{{entryValues}}
+			</v-flex>
 			<v-flex xs12 class="py-2">
 				<h2>Add Expense / Income</h2>
 			</v-flex>
 
 			<!-- Drop-down -->
 			<v-flex xs12>
-				<v-select :items="transactionTypes" item-text="name" item-value="value" v-model="selTransType"></v-select>
+				<v-select :items="transactionTypes" item-text="name" item-value="value" v-model="entryValues.transactionType"></v-select>
 			</v-flex>
 
 			<!-- Date-picker -->
@@ -15,7 +18,7 @@
 				<v-dialog
 					ref="dialog"
 					v-model="dateModal"
-					:return-value.sync="date"
+					:return-value.sync="entryValues.date"
 					persistent
 					lazy
 					full-width
@@ -23,17 +26,17 @@
 				>
 					<template v-slot:activator="{ on }">
 						<v-text-field
-							v-model="date"
+							v-model="entryValues.date"
 							label="Select date"
 							prepend-icon="event"
 							readonly
 							v-on="on"
 						></v-text-field>
 					</template>
-					<v-date-picker v-model="date" scrollable>
+					<v-date-picker v-model="entryValues.date" scrollable>
 						<v-spacer></v-spacer>
 						<v-btn flat color="primary" @click="dateModal = false">Cancel</v-btn>
-						<v-btn flat color="primary" @click="$refs.dialog.save(date);dateModal = false">OK</v-btn>
+						<v-btn flat color="primary" @click="$refs.dialog.save(entryValues.date);dateModal = false">OK</v-btn>
 					</v-date-picker>
 				</v-dialog>
 			</v-flex>
@@ -43,7 +46,7 @@
 				<v-dialog
 					ref="dialog"
 					v-model="timeModal"
-					:return-value.sync="time"
+					:return-value.sync="entryValues.time"
 					persistent
 					lazy
 					full-width
@@ -51,7 +54,7 @@
 				>
 					<template v-slot:activator="{ on }">
 						<v-text-field
-							v-model="time"
+							v-model="entryValues.time"
 							label="Select Time"
 							prepend-icon="access_time"
 							readonly
@@ -60,12 +63,12 @@
 					</template>
 					<v-time-picker
 						v-if="timeModal"
-						v-model="time"
+						v-model="entryValues.time"
 						full-width
 					>
 						<v-spacer></v-spacer>
 						<v-btn flat color="primary" @click="timeModal = false">Cancel</v-btn>
-						<v-btn flat color="primary" @click="$refs.dialog.save(time)">OK</v-btn>
+						<v-btn flat color="primary" @click="$refs.dialog.save(entryValues.time)">OK</v-btn>
 					</v-time-picker>
 				</v-dialog>
 			</v-flex>
@@ -75,6 +78,38 @@
 			<v-flex class="grow">
 				<!-- Amount -->
 				<v-text-field v-model="entryValues.amount" label="Enter amount" regular type="number" append-icon="keyboard" @click:append="showCalculator"></v-text-field>
+			</v-flex>
+		</v-layout>
+
+		<v-layout row wrap>
+			<v-flex xs12>
+				<v-select :items="PayeeOrPayerData.data" item-text="title" item-value="id" :label="PayeeOrPayerData.name" @input="setPayeePayer"></v-select>
+			</v-flex>
+			<v-flex xs12>
+				<v-select :items="ExpenseOrIncomeCategory.data" item-text="title" item-value="id" :label="ExpenseOrIncomeCategory.name" v-model="entryValues.categoryId"></v-select>
+			</v-flex>
+			<v-flex xs12>
+				<v-select :items="PaymentMethods.data" item-text="title" item-value="id" :label="PaymentMethods.name" v-model="entryValues.paymentMethod"></v-select>
+			</v-flex>
+			<v-flex xs12>
+				<v-textarea
+					v-model="entryValues.description"
+					auto-grow
+					box
+					color="primary"
+					label="Description"
+					rows="1"
+				></v-textarea>
+			</v-flex>
+			<v-flex xs12>
+				<v-combobox
+					v-model="entryValues.tags"
+					:items="TagTypes.data"
+					item-text="title"
+					item-value="id"
+					:label="TagTypes.name"
+					multiple
+				></v-combobox>
 			</v-flex>
 		</v-layout>
 	</v-container>
@@ -92,23 +127,54 @@ export default {
 				{name: 'Income', value: 2},
 			],
 
-			// Current selected transaction type
-			selTransType: 1,
+			DBCollections: [
+				{arr: 'payerData', collection: 'payer_list'},
+				{arr: 'payeeData', collection: 'payee_list'},
+				{arr: 'incomeCategory', collection: 'income_types'},
+				{arr: 'expenseCategory', collection: 'expense_types'},
+				{arr: 'statusCategory', collection: 'entry_status'},
+				{arr: 'tagsCategory', collection: 'entry_tags'},
+				{arr: 'paymentCategory', collection: 'payment_methods'},
+			],
 
 			// Date-picker
 			dateModal: false,
-			date: new Date().toISOString().substr(0, 10),
 
 			// Time picker
 			timeModal: false,
-			time: null,
+
+			// Payer/Payee
+			UserSavedData: {
+				payeeData: [],
+				payerData: [],
+				incomeCategory: [],
+				expenseCategory: [],
+				statusCategory: [],
+				tagsCategory: [],
+				paymentCategory: []
+			},
 
 			// Entry values
 			entryValues: {
-				amount: null,
-
+				amount: null,	// Amount
+				transactionType: 1,	// Current selected transaction type
+				payerId: null,
+				payeeId: null,
+				date: new Date().toISOString().substr(0, 10),
+				time: null,
+				categoryId: null,
+				paymentMethod: null,
+				description: null,
+				tags: []
 			}
-			
+		}
+	},
+	watch:{
+		// Reset values
+		'entryValues.transactionType'(val){
+			this.entryValues.payerId = null;
+			this.entryValues.payeeId = null;
+			this.entryValues.categoryId = null;
 		}
 	},
 	computed:{
@@ -120,26 +186,99 @@ export default {
 		// Current user save document
 		SaveDoc(){
 			return this.$__firebase.firestore.collection('transactions').doc(this.User.uid);
-		} 
+		},
+
+		// CUrrent user saved settings document
+		UserSettingDoc(){
+			return this.$__firebase.firestore.collection('settings').doc(this.User.uid);
+		},
+
+		// Payer/Payee data
+		PayeeOrPayerData(){
+			const arrKey = (this.entryValues.transactionType == 1) ? 'payeeData' : 'payerData';
+			const name = (this.entryValues.transactionType == 1) ? 'Payee' : 'Payer';
+
+			let returnVal = [];
+			if(this.UserSavedData[arrKey].length > 0) returnVal = this.UserSavedData[arrKey];
+
+			return {name, data: returnVal};
+		},
+
+		// Expense / Income category
+		ExpenseOrIncomeCategory(){
+			const arrKey = (this.entryValues.transactionType == 1) ? 'expenseCategory' : 'incomeCategory';
+			const name = 'Category';
+
+			let returnVal = [];
+			if(this.UserSavedData[arrKey].length > 0) returnVal = this.UserSavedData[arrKey];
+
+			return {name, data: returnVal};
+		},
+
+		// Payment Methods
+		PaymentMethods(){
+			const arrKey = 'paymentCategory';
+			const name = 'Payment Method';
+
+			let returnVal = [];
+			if(this.UserSavedData[arrKey].length > 0) returnVal = this.UserSavedData[arrKey];
+
+			return {name, data: returnVal}; 
+		},
+
+		// Tags data
+		TagTypes(){
+			const arrKey = 'tagsCategory';
+			const name = 'Tags';
+
+			let returnVal = [];
+			if(this.UserSavedData[arrKey].length > 0) returnVal = this.UserSavedData[arrKey];
+
+			return {name, data: returnVal}; 
+		}
 	},
 	methods:{
 		// Get data
 		getData(){
+			this.DBCollections.forEach(obj => {
+				this.UserSettingDoc.collection(obj.collection.toString()).where('del', '==', false).get().then(snapshot => {
+					if(!snapshot.empty){
+						snapshot.forEach(doc => {
+							if(doc.exists){
+								const data = doc.data();
+								data.id = doc.id;
 
+								if(this.UserSavedData[obj.arr] && !this.UserSavedData[obj.arr].find(object => object.title === data.title)) this.UserSavedData[obj.arr].push(data);
+							}
+						})
+					}
+				}).catch(err => {
+					this.$store.commit('setSnackMsg', err.message);
+				});
+			});
 		},
 
 		// Show calculator
 		showCalculator(){
 			EventBus.$emit('showCalc', true);
+		},
+
+		// Set payer / payee
+		setPayeePayer(val = false){
+			if(!val) return false;
+
+			const key = (this.entryValues.transactionType == 1) ? 'payeeId' : 'payerId';
+			this.entryValues[key] = val;
 		}
 	},
 	mounted(){
+		// Get user saved data
 		this.getData();
 
 		// Calculator results
 		EventBus.$on('calcResults', calVal => {
-			console.log(calVal);
 			this.entryValues.amount = calVal;
+			this.$store.commit('setNav', true);
 		});
 	},
 	beforeDestroy(){
