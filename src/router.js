@@ -93,16 +93,22 @@ const router = new Router({
 			// 	name: 'settings.expense_types',
 			// 	component: () => import('./components/Settings/expense.vue')
 			// },
-			{
-				path: '/expense',
-				name: 'settings.expense_types',
-				component: () => import('./components/Settings/manageExpense.vue'),
-				//showAsOption: false
-			},
+			// {
+			// 	path: '/expense',
+			// 	name: 'settings.expense_types',
+			// 	component: () => import('./components/Settings/manageExpense.vue'),
+			// 	//showAsOption: false
+			// },
 			{
 				path: '/income',
 				name: 'settings.income_types',
 				props: true,
+				component: () => import('./components/Settings/manageList.vue')
+			},
+			{
+				path: '/expense',
+				name: 'settings.expense_types',
+				props: {pgType: 'expense_types'},
 				component: () => import('./components/Settings/manageList.vue')
 			},
 			{
