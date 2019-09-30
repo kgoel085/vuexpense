@@ -142,10 +142,12 @@ export default {
 			// First check for user saved data
 			this.UserFormatSettingDoc.get().then(doc => {
 				if(doc.exists){
-					const {format: data} = doc.data();
-					Object.keys(data).forEach(key => {
-						if(this.formFields.hasOwnProperty(key)) this.formFields[key] = data[key];
-					});
+					const data = doc.data();
+					if(data && typeof data == 'object'){
+						Object.keys(data).forEach(key => {
+							if(this.formFields.hasOwnProperty(key)) this.formFields[key] = data[key];
+						});
+					}
 
 					return this.FormatDoc.get();
 				}
