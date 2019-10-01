@@ -113,13 +113,13 @@ const router = new Router({
 			},
 			{
 				path: '/payee',
-				name: 'settings.payees',
+				name: 'settings.payee_list',
 				props: {pgType: 'payee_list'},
 				component: () => import('./components/Settings/manageList.vue')
 			},
 			{
 				path: '/payer',
-				name: 'settings.payers',
+				name: 'settings.payer_list',
 				props: {pgType: 'payer_list'},
 				component: () => import('./components/Settings/manageList.vue')
 			},
@@ -131,13 +131,13 @@ const router = new Router({
 			},
 			{
 				path: '/status',
-				name: 'settings.status',
+				name: 'settings.entry_status',
 				props: {pgType: 'entry_status'},
 				component: () => import('./components/Settings/manageList.vue')
 			},
 			{
 				path: '/tags',
-				name: 'settings.tags',
+				name: 'settings.entry_tags',
 				props: {pgType: 'entry_tags'},
 				component: () => import('./components/Settings/manageList.vue')
 			},

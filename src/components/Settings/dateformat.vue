@@ -182,7 +182,7 @@ export default {
 			if(data.dateFormat) data.separator = data.dateFormat.split('')[1];
 
 			if(Object.keys(data).length > 0){
-				EventBus.$emit('SettingSaveData', 'format', {...data});
+				EventBus.$emit('SettingSaveData', 'date_format', {...data});
 			}
 		}
 	},

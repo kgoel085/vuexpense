@@ -198,7 +198,7 @@ export default {
 		PayeeOrPayerData(){
 			const arrKey = (this.entryValues.transactionType == 'expense') ? 'payee_list' : 'payer_list';
 			const name = (this.entryValues.transactionType == 'expense') ? 'Payee' : 'Payer';
-			const iconRoute = (this.entryValues.transactionType == 'expense') ? 'settings.payees' : 'settings.payers';
+			const iconRoute = (this.entryValues.transactionType == 'expense') ? 'settings.payee_list' : 'settings.payer_list';
 
 			const returnVal = this.getUserSavedData(arrKey);
 			return {name, data: returnVal, iconRoute, icon: 'perm_identity' };
@@ -229,7 +229,7 @@ export default {
 			const name = 'Status';
 
 			const returnVal = this.getUserSavedData(arrKey);
-			return {name, data: returnVal, iconRoute: 'settings.status', icon: 'done_outline'}; 
+			return {name, data: returnVal, iconRoute: 'settings.entry_status', icon: 'done_outline'}; 
 		},
 
 		// Tags data
@@ -238,7 +238,7 @@ export default {
 			const name = 'Tags';
 
 			const returnVal = this.getUserSavedData(arrKey);
-			return {name, data: returnVal, iconRoute: 'settings.tags', icon: 'bookmarks'}; 
+			return {name, data: returnVal, iconRoute: 'settings.entry_tags', icon: 'bookmarks'}; 
 		}
 	},
 	methods:{
