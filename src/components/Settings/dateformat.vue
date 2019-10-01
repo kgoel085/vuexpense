@@ -43,7 +43,7 @@ export default {
 
 		// Format settings user doc
 		UserFormatSettingDoc(){
-			return this.$__firebase.firestore.collection('settings').doc(this.$__firebase.fireauth.currentUser.uid);
+			return this.$__firebase.firestore.collection('settings').doc(this.$__firebase.fireauth.currentUser.uid).collection('format').doc('data');
 		},
 
 		// Layout fields
@@ -148,11 +148,9 @@ export default {
 							if(this.formFields.hasOwnProperty(key)) this.formFields[key] = data[key];
 						});
 					}
-
-					return this.FormatDoc.get();
 				}
 
-				return false;
+				return this.FormatDoc.get();
 			}).then(masterData => {
 				// Replace empty values with default values
 				if(masterData || !masterData.empty){
@@ -184,7 +182,7 @@ export default {
 			if(data.dateFormat) data.separator = data.dateFormat.split('')[1];
 
 			if(Object.keys(data).length > 0){
-				EventBus.$emit('SettingSaveData', {format: data});
+				EventBus.$emit('SettingSaveData', 'format', {...data});
 			}
 		}
 	},

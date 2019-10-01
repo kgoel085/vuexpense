@@ -66,8 +66,8 @@ export default {
 		},
 
 		// Save settings data
-		saveData(newData = {}){
-			const UserDoc = this.$__firebase.firestore.collection('settings').doc(this.User.uid);
+		saveData(collection, newData = {}){
+			const UserDoc = this.$__firebase.firestore.collection('settings').doc(this.User.uid).collection(collection).doc('data');
 			if(!newData || typeof newData !== 'object'){
 				this.$store.commit('setSnackMsg', 'Invalid data provided');
 				return false;
@@ -84,6 +84,7 @@ export default {
 				
 				if(Object.keys(userSettings).length > 0 || Object.keys(newData).length > 0){
 					const updateData = {...userSettings, ...newData};
+					console.log(updateData, collection);
 					return UserDoc.set(updateData);
 				}
 
@@ -103,8 +104,8 @@ export default {
 		});
 
 		// Capture data save event
-		EventBus.$on('SettingSaveData', (stat = {}) => {
-			this.saveData(stat)
+		EventBus.$on('SettingSaveData', (collection = '', stat = {}) => {
+			this.saveData(collection, stat)
 		})
 	},
 	beforeDestroy(){
