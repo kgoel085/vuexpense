@@ -1,9 +1,6 @@
 <template>
 	<v-container>
 		<v-layout row wrap>
-			<v-flex xs12>
-				{{entryValues}}
-			</v-flex>
 			<v-flex xs12 class="py-2">
 				<h2>Add Expense / Income</h2>
 			</v-flex>
@@ -112,6 +109,13 @@
 				></v-combobox>
 			</v-flex>
 		</v-layout>
+		<v-layout row wrap>
+			<v-flex xs12 class="text-xs-center">
+				<v-slide-y-transition>
+					<v-btn flat class="success" fixed bottom v-if="entryValues.amount" @click="saveEntry">Save</v-btn>
+				</v-slide-y-transition>
+			</v-flex>
+		</v-layout>
 	</v-container>
 </template>
 
@@ -148,12 +152,12 @@ export default {
 			entryValues: {
 				amount: null,	// Amount
 				transactionType: 1,	// Current selected transaction type
-				payerId: null,
-				payeeId: null,
+				payerId: false,
+				payeeId: false,
 				date: new Date().toISOString().substr(0, 10),
 				time: null,
-				categoryId: null,
-				paymentMethod: null,
+				categoryId: false,
+				paymentMethod: false,
 				description: null,
 				tags: []
 			}
@@ -175,7 +179,7 @@ export default {
 
 		// Current user save document
 		SaveDoc(){
-			return this.$__firebase.firestore.collection('transactions').doc(this.User.uid);
+			return this.$__firebase.firestore.collection('transactions').doc(this.User.uid).collection('data');
 		},
 
 		// CUrrent user saved settings document
@@ -262,6 +266,19 @@ export default {
 
 			const key = (this.entryValues.transactionType == 1) ? 'payeeId' : 'payerId';
 			this.entryValues[key] = val;
+		},
+
+		// Save user entry
+		saveEntry(){
+			let dataEntry = this.entryValues;
+
+			const newDoc = this.SaveDoc.doc();
+			newDoc.set(dataEntry).then(result => {
+				this.$store.commit('setSnackMsg', 'Entry success');
+				this.$router.push({name: 'home'});
+			}).catch(err => {
+				this.$store.commit('setSnackMsg', err.message);
+			});
 		}
 	},
 	mounted(){
