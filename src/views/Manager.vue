@@ -80,13 +80,16 @@
 
 		<v-layout row wrap>
 			<v-flex xs12>
-				<v-select :items="PayeeOrPayerData.data" item-text="title" item-value="id" :label="PayeeOrPayerData.name" @input="setPayeePayer"></v-select>
+				<v-select :items="PayeeOrPayerData.data" item-text="title" item-value="id" :label="PayeeOrPayerData.name" @input="setPayeePayer" :append-icon="PayeeOrPayerData.icon" @click:append="$router.push({name: PayeeOrPayerData.iconRoute})"></v-select>
 			</v-flex>
 			<v-flex xs12>
-				<v-select :items="ExpenseOrIncomeCategory.data" item-text="title" item-value="id" :label="ExpenseOrIncomeCategory.name" v-model="entryValues.categoryId"></v-select>
+				<v-select :items="ExpenseOrIncomeCategory.data" item-text="title" item-value="id" :label="ExpenseOrIncomeCategory.name" v-model="entryValues.category" :append-icon="ExpenseOrIncomeCategory.icon" @click:append="$router.push({name: ExpenseOrIncomeCategory.iconRoute})"></v-select>
 			</v-flex>
 			<v-flex xs12>
-				<v-select :items="PaymentMethods.data" item-text="title" item-value="id" :label="PaymentMethods.name" v-model="entryValues.paymentMethod"></v-select>
+				<v-select :items="PaymentMethods.data" item-text="title" item-value="id" :label="PaymentMethods.name" v-model="entryValues.paymentMethod" :append-icon="PaymentMethods.icon" @click:append="$router.push({name: PaymentMethods.iconRoute})"></v-select>
+			</v-flex>
+			<v-flex xs12>
+				<v-select :items="statusTypes.data" item-text="title" item-value="id" :label="statusTypes.name" v-model="entryValues.status" :append-icon="statusTypes.icon" @click:append="$router.push({name: statusTypes.iconRoute})"></v-select>
 			</v-flex>
 			<v-flex xs12>
 				<v-textarea
@@ -99,14 +102,17 @@
 				></v-textarea>
 			</v-flex>
 			<v-flex xs12>
-				<v-combobox
+				<v-select
 					v-model="entryValues.tags"
 					:items="TagTypes.data"
 					item-text="title"
-					item-value="id"
+					item-value="title"
+					:return-object="false"
 					:label="TagTypes.name"
+					:append-icon="TagTypes.icon" 
+					@click:append="$router.push({name: TagTypes.iconRoute})"
 					multiple
-				></v-combobox>
+				></v-select>
 			</v-flex>
 		</v-layout>
 		<v-layout row wrap>
@@ -127,8 +133,8 @@ export default {
 		return {
 			// Transaction types
 			transactionTypes: [
-				{name: 'Expense', value: 1},
-				{name: 'Income', value: 2},
+				{name: 'Expense', value: 'expense'},
+				{name: 'Income', value: 'income'},
 			],
 
 			// Date-picker
@@ -150,25 +156,26 @@ export default {
 
 			// Entry values
 			entryValues: {
-				amount: null,	// Amount
-				transactionType: 1,	// Current selected transaction type
-				payerId: false,
-				payeeId: false,
+				amount: 0,	// Amount
+				transactionType: 'expense',	// Current selected transaction type
+				payer: null,
+				payee: null,
 				date: new Date().toISOString().substr(0, 10),
 				time: null,
-				categoryId: false,
-				paymentMethod: false,
+				category: null,
+				paymentMethod: null,
 				description: null,
-				tags: []
+				tags: [],
+				status: null
 			}
 		}
 	},
 	watch:{
 		// Reset values
 		'entryValues.transactionType'(val){
-			this.entryValues.payerId = null;
-			this.entryValues.payeeId = null;
-			this.entryValues.categoryId = null;
+			this.entryValues.payer = null;
+			this.entryValues.payee = null;
+			this.entryValues.category = null;
 		}
 	},
 	computed:{
@@ -189,20 +196,22 @@ export default {
 
 		// Payer/Payee data
 		PayeeOrPayerData(){
-			const arrKey = (this.entryValues.transactionType == 1) ? 'payee_list' : 'payer_list';
-			const name = (this.entryValues.transactionType == 1) ? 'Payee' : 'Payer';
+			const arrKey = (this.entryValues.transactionType == 'expense') ? 'payee_list' : 'payer_list';
+			const name = (this.entryValues.transactionType == 'expense') ? 'Payee' : 'Payer';
+			const iconRoute = (this.entryValues.transactionType == 'expense') ? 'settings.payees' : 'settings.payers';
 
 			const returnVal = this.getUserSavedData(arrKey);
-			return {name, data: returnVal};
+			return {name, data: returnVal, iconRoute, icon: 'perm_identity' };
 		},
 
 		// Expense / Income category
 		ExpenseOrIncomeCategory(){
-			const arrKey = (this.entryValues.transactionType == 1) ? 'expense_types' : 'income_types';
+			const arrKey = (this.entryValues.transactionType == 'expense') ? 'expense_types' : 'income_types';
+			const iconRoute = (this.entryValues.transactionType == 'expense') ? 'settings.expense_types' : 'settings.income_types';
 			const name = 'Category';
 
 			const returnVal = this.getUserSavedData(arrKey);
-			return {name, data: returnVal};
+			return {name, data: returnVal, iconRoute, icon: 'style'};
 		},
 
 		// Payment Methods
@@ -211,7 +220,16 @@ export default {
 			const name = 'Payment Method';
 
 			const returnVal = this.getUserSavedData(arrKey);
-			return {name, data: returnVal}; 
+			return {name, data: returnVal, iconRoute: 'settings.payment_methods', icon: 'payment'}; 
+		},
+
+		// Status types
+		statusTypes(){
+			const arrKey = 'entry_status';
+			const name = 'Status';
+
+			const returnVal = this.getUserSavedData(arrKey);
+			return {name, data: returnVal, iconRoute: 'settings.status', icon: 'done_outline'}; 
 		},
 
 		// Tags data
@@ -220,7 +238,7 @@ export default {
 			const name = 'Tags';
 
 			const returnVal = this.getUserSavedData(arrKey);
-			return {name, data: returnVal}; 
+			return {name, data: returnVal, iconRoute: 'settings.tags', icon: 'bookmarks'}; 
 		}
 	},
 	methods:{
@@ -264,13 +282,14 @@ export default {
 		setPayeePayer(val = false){
 			if(!val) return false;
 
-			const key = (this.entryValues.transactionType == 1) ? 'payeeId' : 'payerId';
+			const key = (this.entryValues.transactionType == 'expense') ? 'payee' : 'payer';
 			this.entryValues[key] = val;
 		},
 
 		// Save user entry
 		saveEntry(){
 			let dataEntry = this.entryValues;
+			if(dataEntry.hasOwnProperty('amount')) dataEntry.amount = parseInt(dataEntry.amount);
 
 			const newDoc = this.SaveDoc.doc();
 			newDoc.set(dataEntry).then(result => {
