@@ -127,32 +127,22 @@ export default {
 				{name: 'Income', value: 2},
 			],
 
-			DBCollections: [
-				{arr: 'payerData', collection: 'payer_list'},
-				{arr: 'payeeData', collection: 'payee_list'},
-				{arr: 'incomeCategory', collection: 'income_types'},
-				{arr: 'expenseCategory', collection: 'expense_types'},
-				{arr: 'statusCategory', collection: 'entry_status'},
-				{arr: 'tagsCategory', collection: 'entry_tags'},
-				{arr: 'paymentCategory', collection: 'payment_methods'},
-			],
-
 			// Date-picker
 			dateModal: false,
 
 			// Time picker
 			timeModal: false,
 
-			// Payer/Payee
-			UserSavedData: {
-				payeeData: [],
-				payerData: [],
-				incomeCategory: [],
-				expenseCategory: [],
-				statusCategory: [],
-				tagsCategory: [],
-				paymentCategory: []
-			},
+			// User saved data
+			UserSaveData: [
+				{data: [], collection: 'payer_list'},
+				{data: [], collection: 'payee_list'},
+				{data: [], collection: 'income_types'},
+				{data: [], collection: 'expense_types'},
+				{data: [], collection: 'entry_status'},
+				{data: [], collection: 'entry_tags'},
+				{data: [], collection: 'payment_methods'},
+			],
 
 			// Entry values
 			entryValues: {
@@ -195,52 +185,44 @@ export default {
 
 		// Payer/Payee data
 		PayeeOrPayerData(){
-			const arrKey = (this.entryValues.transactionType == 1) ? 'payeeData' : 'payerData';
+			const arrKey = (this.entryValues.transactionType == 1) ? 'payee_list' : 'payer_list';
 			const name = (this.entryValues.transactionType == 1) ? 'Payee' : 'Payer';
 
-			let returnVal = [];
-			if(this.UserSavedData[arrKey].length > 0) returnVal = this.UserSavedData[arrKey];
-
+			const returnVal = this.getUserSavedData(arrKey);
 			return {name, data: returnVal};
 		},
 
 		// Expense / Income category
 		ExpenseOrIncomeCategory(){
-			const arrKey = (this.entryValues.transactionType == 1) ? 'expenseCategory' : 'incomeCategory';
+			const arrKey = (this.entryValues.transactionType == 1) ? 'expense_types' : 'income_types';
 			const name = 'Category';
 
-			let returnVal = [];
-			if(this.UserSavedData[arrKey].length > 0) returnVal = this.UserSavedData[arrKey];
-
+			const returnVal = this.getUserSavedData(arrKey);
 			return {name, data: returnVal};
 		},
 
 		// Payment Methods
 		PaymentMethods(){
-			const arrKey = 'paymentCategory';
+			const arrKey = 'payment_methods';
 			const name = 'Payment Method';
 
-			let returnVal = [];
-			if(this.UserSavedData[arrKey].length > 0) returnVal = this.UserSavedData[arrKey];
-
+			const returnVal = this.getUserSavedData(arrKey);
 			return {name, data: returnVal}; 
 		},
 
 		// Tags data
 		TagTypes(){
-			const arrKey = 'tagsCategory';
+			const arrKey = 'entry_tags';
 			const name = 'Tags';
 
-			let returnVal = [];
-			if(this.UserSavedData[arrKey].length > 0) returnVal = this.UserSavedData[arrKey];
-
+			const returnVal = this.getUserSavedData(arrKey);
 			return {name, data: returnVal}; 
 		}
 	},
 	methods:{
 		// Get data
 		getData(){
-			this.DBCollections.forEach(obj => {
+			this.UserSaveData.forEach(obj => {
 				this.UserSettingDoc.collection(obj.collection.toString()).where('del', '==', false).get().then(snapshot => {
 					if(!snapshot.empty){
 						snapshot.forEach(doc => {
@@ -248,7 +230,8 @@ export default {
 								const data = doc.data();
 								data.id = doc.id;
 
-								if(this.UserSavedData[obj.arr] && !this.UserSavedData[obj.arr].find(object => object.title === data.title)) this.UserSavedData[obj.arr].push(data);
+								// if(this.UserSavedData[obj.arr] && !this.UserSavedData[obj.arr].find(object => object.title === data.title)) this.UserSavedData[obj.arr].push(data);
+								if(obj.data && !obj.data.find(object => object.title === data.title)) obj.data.push(data);
 							}
 						})
 					}
@@ -256,6 +239,16 @@ export default {
 					this.$store.commit('setSnackMsg', err.message);
 				});
 			});
+		},
+
+		// Get user saved data
+		getUserSavedData(key = false){
+			let returnVal = [];
+
+			const currentObj = this.UserSaveData.find(obj => obj.collection === key);
+			if(currentObj && currentObj.hasOwnProperty('data') && currentObj.data.length > 0) returnVal = currentObj.data;
+
+			return returnVal;
 		},
 
 		// Show calculator
