@@ -122,7 +122,6 @@ export default {
 		// Save current currency
 		saveCurrency(){
 			const findCurrency = this.currencyData.find(obj => obj.currency === this.checkedCurrency);
-			console.log(findCurrency);
 			if(findCurrency) EventBus.$emit('SettingSaveData', 'currency', {...findCurrency});
 		}
 	},
