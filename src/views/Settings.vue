@@ -90,6 +90,7 @@ export default {
 				const err = new Error('No data found to update');
 				return Promise.reject(err);
 			}).then(result => {
+				this.$store.dispatch('getUserSettings');
 				this.$store.commit('setSnackMsg', `${currentRouteName.replace('_', ' ')} updated successfully`);
 				this.$router.push({name: 'settings'});
 			}).catch(err => {

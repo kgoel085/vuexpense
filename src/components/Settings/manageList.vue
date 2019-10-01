@@ -93,7 +93,10 @@ export default {
 	methods:{
 		// Get master data
 		getData(refresh = false){
-			if(refresh) this.dataArr = [];
+			if(refresh){
+				this.dataArr = [];
+				this.$store.dispatch('getUserSettings');
+			}
 
 			this.loading = true;
 			this.MasterDoc.orderBy('title', 'asc').where('del', '==', (this.filter) ? this.filter : false).get().then(snapShot => {
