@@ -1,208 +1,228 @@
 <template>
 	<v-container fluid>
 		<v-layout row wrap>
-			<v-flex xs12 md3 class="pa-1">
-				<!-- Handle current date related operations like add/update/delete operations for current data -->
-				<Leftbar></Leftbar>
-			</v-flex>
-			<v-flex xs12 md9 class="pa-1">
-				<!-- View user data -->
-				<MainContent></MainContent>
+			<v-flex xs12>
+				<v-card flat>
+					<v-card-title>
+						<!-- Current balance -->
+						<v-layout row wrap>
+							<v-flex class="grow">
+								<h3>Current Balance</h3>
+							</v-flex>
+							<v-flex class="shrink">
+								<strong class="success--text">{{ UserCurrencySymbol }}  {{ parseInt(TotalExpenses.total) ? TotalExpenses.total : 0 }}</strong>
+							</v-flex>
+						</v-layout>
+					</v-card-title>
+					<v-card-text>
+						<v-expansion-panel>
+							<v-expansion-panel-content v-for="item in TimeViewItems" :key="item.name">
+								<template v-slot:header>
+									<v-layout row wrap>
+										<v-flex class="grow">
+											<strong>{{ item.name }}</strong>
+										</v-flex>
+										<v-flex class="shrink">
+											<span class="success--text">{{UserCurrencySymbol}} {{ item.total }}</span>
+										</v-flex>
+									</v-layout>
+								</template>
+								
+								<v-card flat>
+									<v-card-text>
+										<template v-if="Object.keys(item.data).length == 0">
+											<v-alert :value="true" type="warning">
+												No Entries found
+											</v-alert>
+										</template>
+
+										<template v-else>
+											<v-expansion-panel>
+												<v-expansion-panel-content v-for="(childItem, indx) in item.data" :key="childItem.id" >
+													<template v-slot:header>
+														<v-layout row wrap>
+															<v-flex class="grow">
+																<strong>{{ indx.replace(/\b\w/g, l => l.toUpperCase()) }}</strong>
+															</v-flex>
+															<v-flex class="shrink">
+																<span class="grey--text">{{UserCurrencySymbol}} {{ childItem.total }}</span>
+															</v-flex>
+														</v-layout>
+													</template>
+
+													<v-card flat>
+														<v-card-text>
+															<v-list>
+																<v-list-tile v-for="entry in childItem" :key="entry.id">
+																	<v-list-tile-title>
+																		<v-layout row wrap>
+																			<v-flex class="grow">
+																				<span>{{ entry.description }}</span>
+																			</v-flex>
+																			<v-flex class="shrink">
+																				<small class="grey--text"> {{UserCurrencySymbol}} {{ entry.amount }}</small>
+																			</v-flex>
+																		</v-layout>
+																	</v-list-tile-title>
+																</v-list-tile>
+															</v-list>
+														</v-card-text>	
+													</v-card>
+												</v-expansion-panel-content>
+											</v-expansion-panel>
+										</template>
+									</v-card-text>
+								</v-card>
+							</v-expansion-panel-content>
+						</v-expansion-panel>
+					</v-card-text>
+				</v-card>
 			</v-flex>
 		</v-layout>
-
-		<!-- Confirmation dialog ( Delete / Restore ) -->
-        <v-dialog
-            v-model="dialog.show"
-            persistent
-            width="50%"
-        >
-            <v-card color="primary" dark v-if="dialog.loading || !dialog.data">
-                <v-card-text>
-                    Please stand by
-                    <v-progress-linear indeterminate color="white" class="mb-0" ></v-progress-linear>
-                </v-card-text>
-            </v-card>
-            <v-card v-else class="grow">
-                <v-card-title class="text-xs-center">
-                    <v-flex xs12>
-                        <span class="headline">Are you sure to {{ (dialog.restore ? 'restore' : 'delete') }} selected record ?</span>
-                    </v-flex>
-                </v-card-title>
-
-                <v-card-actions>
-                    <v-flex xs12  class="text-xs-center">
-                        <v-btn flat :small="$vuetify.breakpoint.smAndDown" class="primary error ma-1" @click="deleteRecord(dialog.data.id, dialog.restore)">
-                            Confirm
-                        </v-btn>
-
-                        <v-btn flat :small="$vuetify.breakpoint.smAndDown" class="secondary ma-1" @click="dialog.show = false">
-                            Cancel
-                        </v-btn>
-                    </v-flex>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
 	</v-container>
 </template>
 
 <script>
-// Modules
-import EventBus from '../helpers/EventBus';
-
-// Components
-const Leftbar = () => import('@/components/Home/LeftBar');
-const MainContent = () => import('@/components/Home/MainContent');
-
 export default {
 	data(){
-		return {
-			// Manages the delete / restore  dialog box 
-			dialog:{
-				show: false,
-				restore: false,
-				loading: true,
-				data: false,
-				doc: false
-			},
+		return{
+			// Stores user entered data
+			dataArr: [],
 		}
 	},
 	computed:{
-		// Current tab data
-		currentTab(){
-			return this.$store.state.home.tabData;
-		}
-	},
-	watch:{
-		// Reset dialog values
-		'dialog.show'(val){
-			if(!val){
-				this.dialog.data = false;
-				this.dialog.doc = false;
-				this.dialog.loading = true;
-				this.dialog.restore = false;
-			}
+		// Current User
+		User(){
+			return this.$__firebase.fireauth.currentUser;
 		},
-		currentTab(val){
-			// Process data points for the current tab
-			this.processCalenderDataPoints();
+
+		// User saved settings
+		UserSettings(){
+			return this.$store.getters.UserSavedSettings;
+		},
+
+		// User saved currency symbol
+		UserCurrencySymbol(){
+			if(this.UserSettings && this.UserSettings.hasOwnProperty('currency')){
+				return this.UserSettings.currency[0].symbol;
+			}
+
+			return '';
+		},
+
+		// Transactions data document
+		TransactionDoc(){
+			return this.$__firebase.firestore.collection('transactions').doc(this.User.uid).collection('data');
+		},
+
+		// Returns transaction arr
+		TransactionArr(){
+			let returnVal = false;
+
+			if(this.dataArr && this.dataArr.length > 0){
+				const expenseValues = this.dataArr.filter(obj => obj.transactionType == 'expense');
+				const incomeValues = this.dataArr.filter(obj => obj.transactionType == 'income');
+
+				if(expenseValues.length > 0 || incomeValues.length > 0){
+					returnVal = {
+						expense: (expenseValues && expenseValues.length > 0) ? expenseValues : [],
+						income: (incomeValues && incomeValues.length > 0) ? incomeValues : [],
+					};
+				}
+			}
+
+			return returnVal;
+		},
+
+		// Stores the total expense / income for current data
+		TotalExpenses(){
+			let expenseTotal, incomeTotal = 0;
+
+			if(this.TransactionArr){
+				const expenseNumbers = this.TransactionArr['expense'].map(obj => {
+					return obj.amount;
+				}).reduce((acc, val) => acc + val, 0);
+				const incomeNumbers = this.TransactionArr['income'].map(obj => {
+					return obj.amount;
+				}).reduce((acc, val) => acc + val, 0);
+
+				if(expenseNumbers > 0) expenseTotal = expenseNumbers;
+				if(incomeNumbers > 0) incomeTotal = incomeNumbers;
+			}
+			return {expenseTotal, incomeTotal, total: parseInt(incomeTotal - expenseTotal)};
+		},
+
+		// Get time based data
+		TimeViewItems(){
+			return [
+				{...this.DailyData},
+			]
+		},
+
+		// Daily data
+		DailyData(){
+			let returnVal = {name: 'Daily', data: {}, total: 0};
+			
+			if(this.TransactionArr){
+				Object.keys(this.TransactionArr).forEach(key => {
+					let total = 0;
+					returnVal['data'][key] = [];
+
+					const currentObj = this.TransactionArr[key];
+					currentObj.forEach(obj => {
+						if(this.DateTime(obj.date) == this.DateTime()){
+							total += obj.amount;
+							returnVal['data'][key].push(obj);
+						}
+					});
+
+					returnVal['data'][key]['total'] = total;
+				});
+
+				const expenseTotal = (returnVal['data']['expense']['total']) ? returnVal['data']['expense']['total'] : 0;
+				const incomeTotal = (returnVal['data']['income']['total']) ? returnVal['data']['income']['total'] : 0;
+
+				returnVal['total'] = incomeTotal - expenseTotal;
+			}
+
+			return returnVal;
 		}
 	},
 	methods:{
-		// Delete requested data
-		confirmDelete(doc = false, id = false){
-			if(!id || !doc || !id) return false;
-			const expenseCollection = doc;
-
-			// Check if document really exists
-			const expenseDoc = expenseCollection.doc(id);
-			expenseDoc.get().then(doc => {	
-				if(doc.exists){
-					let data = doc.data();
-					data['id'] = id;
-					
-					// Check if record was previously deleted or not 
-					if(data.hasOwnProperty('delete')){
-						if(data.delete) this.dialog.restore = true;
-						else this.dialog.restore = false;
-					}
-
-					// Set dialog values
-					this.dialog.show = true;
-					this.dialog.data = data;
-					this.dialog.loading = false;
-					this.dialog.doc = expenseDoc;
-				}
-			}).catch(err => {
-				this.$store.commit('setSnackMsg', err.message);
-			});
-		},
-
-		// Mark the received document as deleted
-		deleteRecord(id, restore = false){
-			this.loading = true;
-
-			// Get collection
-			const expenseDoc = this.dialog.doc;
-			if(!id || !expenseDoc){
-				this.loading = false;
-				this.dialog.show = false;
-
-				this.$store.commit('setSnackMsg', 'Unknown Error !');
-				return false;
-			}
-
-			// Set delete value
-			let deleteVal = (restore) ? false : true;
-
-			// Perform operation
-			expenseDoc.update({
-				delete: deleteVal
-			}).then(resp => {
-				this.$store.commit('setSnackMsg', 'Operation successful');
-				
-				this.dialog.show = false;
-				this.loading = false;
-
-				// Trigger update in current component
-				EventBus.$emit('date-changed', this.$store.state.home.currentDate);
-			}).catch(err => {
-				this.loading = false;
-				this.$store.commit('setSnackMsg', err.message);
-			});
-		},
-
-		// Process the received snapshot data and pass processed data to calender
-		processCalenderDataPoints(){
-			if(!this.currentTab || !this.currentTab.hasOwnProperty('doc')) return false;
-
-			// Get all the available data points
-			const doc = this.$__firebase.firestore.collection(this.currentTab.doc).doc(this.$__firebase.fireauth.currentUser.uid).collection('data');
-			if(!doc) return false;
-			
-			let returnVal = false;
-
-			// Get Data
-            doc.get().then(snapShot => {
-                if(!snapShot.empty){
-					snapShot.forEach(doc => {
+		// Get all the data
+		getData(){
+			this.TransactionDoc.get().then(snapshot => {
+				if(!snapshot.empty){
+					snapshot.forEach(doc => {
 						if(doc.exists){
-							if(!returnVal) returnVal = [];
+							const data = doc.data();
+							data.id = doc.id;
 
-							let {date, month, year} = doc.data();
-							if(month && month >= 1) month -= 1;
-
-							const newDate = new Date();
-							newDate.setFullYear(year);
-							newDate.setMonth(month);
-							newDate.setDate(date);
-
-							const finalDate = newDate.toISOString().substr(0, 10);
-
-							if(returnVal.indexOf(finalDate) < 0) returnVal.push(finalDate);
+							this.dataArr.push(data);
 						}
-					});
+					})
 				}
-				
-				// Emit the data points to other components
-				EventBus.$emit('capture-data-points', returnVal);
-            });
+			}).catch(err => {
+				this.$store,commit('setSnackMsg', err.message);
+			})
+		},
+
+		// Returns date in time format for provided date
+		DateTime(dateVal = false){
+			let currentDate = (dateVal) ? new Date(dateVal) : new Date('2019-10-01');
+
+			const year = currentDate.getFullYear();
+			const month = (currentDate.getMonth() <= 9) ? '0'+currentDate.getMonth() : currentDate.getMonth();
+			const date = (currentDate.getDate() <= 9) ? '0'+currentDate.getDate() : currentDate.getDate();
+			const minutes = 0;
+			const hour = 0;
+			const seconds = 0;
+
+			return new Date(year, month, date, hour, minutes, seconds).getTime();
 		}
 	},
-	components:{
-		Leftbar,
-		MainContent
-	},
 	mounted(){
-		// Set vuex variables
-		EventBus.$on('date-changed', date => this.$store.commit('setHomeDate', date));
-		EventBus.$on('set-tab', tab => {this.$store.commit('setHomeTab', tab); this.processCalenderDataPoints()});
-		EventBus.$on('set-tab-data', data => this.$store.commit('setHomeTabData', data));
-		EventBus.$on('disable-element', state => this.$store.commit('disableElements', state));
-		EventBus.$on('delete-db-data', ({doc, id}) => this.confirmDelete(doc, id));
-	},
-	beforeDestroy(){
-		EventBus.$off(['date-changed', 'set-tab', 'set-tab-data', 'disable-element', 'delete-db-data']);
+		this.getData();
 	}
 }
 </script>
