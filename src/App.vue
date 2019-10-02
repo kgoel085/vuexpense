@@ -67,6 +67,10 @@ export default {
     }
   },
   mounted(){
+	// Get user saved settings
+	this.$store.dispatch('getUserSettings');
+
+	
 	EventBus.$on('showCalc', (stat = false) => {
 		this.showCalc = stat
 	});
