@@ -20,7 +20,10 @@
 								<template v-slot:header>
 									<v-layout row wrap>
 										<v-flex class="grow">
-											<strong>{{ item.name }}</strong>
+											<strong>{{ item.name | capitalize }}</strong>
+										</v-flex>
+										<v-flex class="grow" v-if="item.dateFormat">
+											<span class="grey--text">{{item.dateFormat}}</span>
 										</v-flex>
 										<v-flex class="shrink">
 											<span class="success--text">{{UserCurrencySymbol}} {{ item.total }}</span>
@@ -42,7 +45,7 @@
 													<template v-slot:header>
 														<v-layout row wrap>
 															<v-flex class="grow">
-																<strong>{{ indx.replace(/\b\w/g, l => l.toUpperCase()) }}</strong>
+																<strong>{{ indx | capitalize }}</strong>
 															</v-flex>
 															<v-flex class="shrink">
 																<span class="grey--text">{{UserCurrencySymbol}} {{ childItem.total }}</span>
@@ -54,16 +57,16 @@
 														<v-card-text>
 															<v-list>
 																<v-list-tile v-for="entry in childItem" :key="entry.id">
-																	<v-list-tile-title>
-																		<v-layout row wrap>
+																	<v-list-tile-content>
+																		<v-layout row wrap style="width: 100%">
 																			<v-flex class="grow">
-																				<span>{{ entry.description }}</span>
+																				<span left>{{ entry.description }}</span> <v-chip light small>{{entry.date}}</v-chip>
 																			</v-flex>
 																			<v-flex class="shrink">
 																				<small class="grey--text"> {{UserCurrencySymbol}} {{ entry.amount }}</small>
 																			</v-flex>
 																		</v-layout>
-																	</v-list-tile-title>
+																	</v-list-tile-content>
 																</v-list-tile>
 															</v-list>
 														</v-card-text>	
@@ -155,37 +158,11 @@ export default {
 		// Get time based data
 		TimeViewItems(){
 			return [
-				{...this.DailyData},
+				{...this.filterData('daily')},
+				{...this.filterData('weekly')},
+				{...this.filterData('monthly')},
+				{...this.filterData('yearly')},
 			]
-		},
-
-		// Daily data
-		DailyData(){
-			let returnVal = {name: 'Daily', data: {}, total: 0};
-			
-			if(this.TransactionArr){
-				Object.keys(this.TransactionArr).forEach(key => {
-					let total = 0;
-					returnVal['data'][key] = [];
-
-					const currentObj = this.TransactionArr[key];
-					currentObj.forEach(obj => {
-						if(this.DateTime(obj.date) == this.DateTime()){
-							total += obj.amount;
-							returnVal['data'][key].push(obj);
-						}
-					});
-
-					returnVal['data'][key]['total'] = total;
-				});
-
-				const expenseTotal = (returnVal['data']['expense']['total']) ? returnVal['data']['expense']['total'] : 0;
-				const incomeTotal = (returnVal['data']['income']['total']) ? returnVal['data']['income']['total'] : 0;
-
-				returnVal['total'] = incomeTotal - expenseTotal;
-			}
-
-			return returnVal;
 		}
 	},
 	methods:{
@@ -219,6 +196,70 @@ export default {
 			const seconds = 0;
 
 			return new Date(year, month, date, hour, minutes, seconds).getTime();
+		},
+
+		// Filter the data
+		filterData(filter = 'daily'){
+			let returnVal = {name: filter, data: {}, total: 0, dateFormat: false};
+			if(!filter) return returnVal;
+
+			const currentDate = new Date();
+			let ifConditionMatched = false;
+
+			switch(filter){
+				case 'daily':
+					returnVal.dateFormat = currentDate.toLocaleDateString();
+					ifConditionMatched = date => this.DateTime(date) == this.DateTime();
+				break;
+
+				case 'monthly':
+					let startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+					let endDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+
+					returnVal.dateFormat = ` ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+					ifConditionMatched = date => this.DateTime(date) <= endDate.getTime() && this.DateTime(date) >= startDate.getTime();
+				break;
+
+				case 'weekly':
+					let startWeek = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 7);
+					let endWeek = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+
+					returnVal.dateFormat = ` ${startWeek.toLocaleDateString()} - ${endWeek.toLocaleDateString()}`;
+					ifConditionMatched = date => this.DateTime(date) <= endWeek.getTime() && this.DateTime(date) >= startWeek.getTime();
+				break;
+
+				case 'yearly':
+					let startYear = new Date(currentDate.getFullYear(), 0, 1);
+					let endYear = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+
+					returnVal.dateFormat = ` ${startYear.toLocaleDateString()} - ${endYear.toLocaleDateString()}`;
+					ifConditionMatched = date => this.DateTime(date) <= endYear.getTime() && this.DateTime(date) >= startYear.getTime();
+				break;
+			}
+
+			if(this.TransactionArr && ifConditionMatched){
+				Object.keys(this.TransactionArr).forEach(key => {
+					let total = 0;
+					returnVal['data'][key] = [];
+
+					const currentObj = this.TransactionArr[key];
+					currentObj.forEach(obj => {
+						if(ifConditionMatched(obj.date)){
+							total += obj.amount;
+							returnVal['data'][key].push(obj);
+						}
+					});
+
+					returnVal['data'][key]['total'] = total;
+				});
+
+				const expenseTotal = (returnVal['data']['expense']['total']) ? returnVal['data']['expense']['total'] : 0;
+				const incomeTotal = (returnVal['data']['income']['total']) ? returnVal['data']['income']['total'] : 0;
+
+				returnVal['total'] = incomeTotal - expenseTotal;
+			}
+
+			return returnVal;
 		}
 	},
 	mounted(){
