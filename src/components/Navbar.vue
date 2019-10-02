@@ -116,7 +116,7 @@ export default {
     computed:{
       // Show / Hide navbar 
         show(){
-            return this.$store.state.global.showNav;
+            return (this.$store.state.global.showNav && this.$__firebase.fireauth.currentUser) ? true : false;
             // return true;
 		},
 
