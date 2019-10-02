@@ -168,7 +168,7 @@ export default {
 	methods:{
 		// Get all the data
 		getData(){
-			this.TransactionDoc.get().then(snapshot => {
+			this.TransactionDoc.orderBy('date', 'desc').get().then(snapshot => {
 				if(!snapshot.empty){
 					snapshot.forEach(doc => {
 						if(doc.exists){
