@@ -59,9 +59,19 @@ const router = new Router({
       component: () => import('./views/User.vue')
     },
     {
+      path: '/manager',
+      name: 'manager',
+      component: () => import('./views/Manager.vue')
+    },
+    {
       path: '/suggest',
       name: 'suggest',
       component: () => import('./views/Suggestions.vue')
+	},
+	{
+		path: '/calculator',
+		name: 'calculator',
+		component: () => import('./components/Calculator.vue')
 	},
 	{
 		path: '/settings',
@@ -83,12 +93,12 @@ const router = new Router({
 			// 	name: 'settings.expense_types',
 			// 	component: () => import('./components/Settings/expense.vue')
 			// },
-			{
-				path: '/expense',
-				name: 'settings.expense_types',
-				component: () => import('./components/Settings/manageExpense.vue'),
-				//showAsOption: false
-			},
+			// {
+			// 	path: '/expense',
+			// 	name: 'settings.expense_types',
+			// 	component: () => import('./components/Settings/manageExpense.vue'),
+			// 	//showAsOption: false
+			// },
 			{
 				path: '/income',
 				name: 'settings.income_types',
@@ -96,14 +106,20 @@ const router = new Router({
 				component: () => import('./components/Settings/manageList.vue')
 			},
 			{
+				path: '/expense',
+				name: 'settings.expense_types',
+				props: {pgType: 'expense_types'},
+				component: () => import('./components/Settings/manageList.vue')
+			},
+			{
 				path: '/payee',
-				name: 'settings.payees',
+				name: 'settings.payee_list',
 				props: {pgType: 'payee_list'},
 				component: () => import('./components/Settings/manageList.vue')
 			},
 			{
 				path: '/payer',
-				name: 'settings.payers',
+				name: 'settings.payer_list',
 				props: {pgType: 'payer_list'},
 				component: () => import('./components/Settings/manageList.vue')
 			},
@@ -115,13 +131,13 @@ const router = new Router({
 			},
 			{
 				path: '/status',
-				name: 'settings.status',
+				name: 'settings.entry_status',
 				props: {pgType: 'entry_status'},
 				component: () => import('./components/Settings/manageList.vue')
 			},
 			{
 				path: '/tags',
-				name: 'settings.tags',
+				name: 'settings.entry_tags',
 				props: {pgType: 'entry_tags'},
 				component: () => import('./components/Settings/manageList.vue')
 			},

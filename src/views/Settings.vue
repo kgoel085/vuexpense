@@ -66,8 +66,8 @@ export default {
 		},
 
 		// Save settings data
-		saveData(newData = {}){
-			const UserDoc = this.$__firebase.firestore.collection('settings').doc(this.User.uid);
+		saveData(collection, newData = {}){
+			const UserDoc = this.$__firebase.firestore.collection('settings').doc(this.User.uid).collection(collection).doc('data');
 			if(!newData || typeof newData !== 'object'){
 				this.$store.commit('setSnackMsg', 'Invalid data provided');
 				return false;
@@ -81,8 +81,8 @@ export default {
 					const data = doc.data();
 					if(data) userSettings = {...data};
 				}
-
-				if(Object.keys(userSettings).length > 0){
+				
+				if(Object.keys(userSettings).length > 0 || Object.keys(newData).length > 0){
 					const updateData = {...userSettings, ...newData};
 					return UserDoc.set(updateData);
 				}
@@ -90,6 +90,7 @@ export default {
 				const err = new Error('No data found to update');
 				return Promise.reject(err);
 			}).then(result => {
+				this.$store.dispatch('getUserSettings');
 				this.$store.commit('setSnackMsg', `${currentRouteName.replace('_', ' ')} updated successfully`);
 				this.$router.push({name: 'settings'});
 			}).catch(err => {
@@ -103,8 +104,8 @@ export default {
 		});
 
 		// Capture data save event
-		EventBus.$on('SettingSaveData', (stat = {}) => {
-			this.saveData(stat)
+		EventBus.$on('SettingSaveData', (collection = '', stat = {}) => {
+			this.saveData(collection, stat)
 		})
 	},
 	beforeDestroy(){

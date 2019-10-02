@@ -59,7 +59,7 @@ export default {
 		// Get latest currency exchange price details
 		getCurrency(){
 			const doc = this.$__firebase.firestore.collection('master').doc('data').collection('currency');
-			const UserDoc = this.$__firebase.firestore.collection('settings').doc(this.$__firebase.fireauth.currentUser.uid);
+			const UserDoc = this.$__firebase.firestore.collection('settings').doc(this.$__firebase.fireauth.currentUser.uid).collection('currency').doc('data');
 
 			// Get user settings document
 			UserDoc.get().then(uData => {
@@ -121,7 +121,8 @@ export default {
 
 		// Save current currency
 		saveCurrency(){
-			EventBus.$emit('SettingSaveData', {currency: this.checkedCurrency});
+			const findCurrency = this.currencyData.find(obj => obj.currency === this.checkedCurrency);
+			if(findCurrency) EventBus.$emit('SettingSaveData', 'currency', {...findCurrency});
 		}
 	},
 	components:{

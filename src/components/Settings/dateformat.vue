@@ -43,7 +43,7 @@ export default {
 
 		// Format settings user doc
 		UserFormatSettingDoc(){
-			return this.$__firebase.firestore.collection('settings').doc(this.$__firebase.fireauth.currentUser.uid);
+			return this.$__firebase.firestore.collection('settings').doc(this.$__firebase.fireauth.currentUser.uid).collection('format').doc('data');
 		},
 
 		// Layout fields
@@ -142,15 +142,15 @@ export default {
 			// First check for user saved data
 			this.UserFormatSettingDoc.get().then(doc => {
 				if(doc.exists){
-					const {format: data} = doc.data();
-					Object.keys(data).forEach(key => {
-						if(this.formFields.hasOwnProperty(key)) this.formFields[key] = data[key];
-					});
-
-					return this.FormatDoc.get();
+					const data = doc.data();
+					if(data && typeof data == 'object'){
+						Object.keys(data).forEach(key => {
+							if(this.formFields.hasOwnProperty(key)) this.formFields[key] = data[key];
+						});
+					}
 				}
 
-				return false;
+				return this.FormatDoc.get();
 			}).then(masterData => {
 				// Replace empty values with default values
 				if(masterData || !masterData.empty){
@@ -182,7 +182,7 @@ export default {
 			if(data.dateFormat) data.separator = data.dateFormat.split('')[1];
 
 			if(Object.keys(data).length > 0){
-				EventBus.$emit('SettingSaveData', {format: data});
+				EventBus.$emit('SettingSaveData', 'date_format', {...data});
 			}
 		}
 	},

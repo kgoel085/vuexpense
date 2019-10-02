@@ -107,6 +107,7 @@ export default {
 			drawer: false,
 			menuItems:[
 				{title: 'Home', to: '/home'},
+				{title: 'Add expense / income', to: '/manager'},
 				{title: 'Settings', to: '/settings'},
 				// {title: 'Feature Request', to: '/suggest'},
 			],
@@ -115,7 +116,8 @@ export default {
     computed:{
       // Show / Hide navbar 
         show(){
-            return this.$store.state.global.showNav;
+            //return this.$store.state.global.showNav;
+            return true;
 		},
 
 		// Returns user object

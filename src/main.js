@@ -6,6 +6,10 @@ import store from './store'
 import 'roboto-fontface/css/roboto/roboto-fontface.css'
 import 'material-design-icons-iconfont/dist/material-design-icons.css'
 
+// Filters
+import Filters from 'vue2-filters';
+Vue.use(Filters)
+
 // Initialize firebase hook for vue object 
 import fBase from './helpers/firebase';
 
@@ -19,6 +23,8 @@ fBase.fireauth.onAuthStateChanged(usr => {
   // Check for user object
   let userObj = (usr) ? usr : false;
   store.commit('setUser', userObj);
+
+  if(userObj) store.dispatch('getUserSettings', userObj);
 
   // Render the app
   new Vue({
