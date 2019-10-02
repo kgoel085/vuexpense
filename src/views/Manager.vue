@@ -15,7 +15,6 @@
 				<v-dialog
 					ref="dialog"
 					v-model="dateModal"
-					:return-value.sync="entryValues.date"
 					persistent
 					lazy
 					full-width
@@ -33,7 +32,7 @@
 					<v-date-picker v-model="entryValues.date" scrollable>
 						<v-spacer></v-spacer>
 						<v-btn flat color="primary" @click="dateModal = false">Cancel</v-btn>
-						<v-btn flat color="primary" @click="$refs.dialog.save(entryValues.date);dateModal = false">OK</v-btn>
+						<v-btn flat color="primary" @click="dateModal = false">OK</v-btn>
 					</v-date-picker>
 				</v-dialog>
 			</v-flex>
@@ -43,7 +42,6 @@
 				<v-dialog
 					ref="dialog"
 					v-model="timeModal"
-					:return-value.sync="entryValues.time"
 					persistent
 					lazy
 					full-width
@@ -65,7 +63,7 @@
 					>
 						<v-spacer></v-spacer>
 						<v-btn flat color="primary" @click="timeModal = false">Cancel</v-btn>
-						<v-btn flat color="primary" @click="$refs.dialog.save(entryValues.time)">OK</v-btn>
+						<v-btn flat color="primary" @click="timeModal = false">OK</v-btn>
 					</v-time-picker>
 				</v-dialog>
 			</v-flex>
