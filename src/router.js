@@ -37,9 +37,21 @@ const router = new Router({
       redirect: '/login'
     },
     {
-      path: '/home',
-      name: 'home',
-      component: () => import('./views/Home.vue')
+      	path: '/home',
+      	name: 'home',
+	  	component: () => import('./views/Home.vue'),
+	  	children:[
+			{
+				path:'/summary',
+				name: 'home.summary',
+				component: () => import('./components/Home/Summary.vue')
+			},
+			{
+				path:'/calender',
+				name: 'home.Calender',
+				component: () => import('./components/Home/Calender.vue')
+			},
+		]
     },
     {
       path: '/login',
