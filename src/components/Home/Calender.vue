@@ -1,21 +1,10 @@
 <template>
 	<v-layout row wrap>
-		<v-flex xs12>
-			{{calenderDates}}
-			<table border="1" style="width:100%">
-				<thead>
-					<tr>
-						<th v-for="(week, indx) in weeks" :key="indx">{{week}}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="(week, indx) in weeks" :key="indx">
-						<td v-for="(day, dayIndex) in calenderDates[indx]" :key="dayIndex">
-							<span v-if="parseInt(day[0]) > 0">{{ day[0] }}</span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+		<v-flex xs12 class="py-2">
+			<v-date-picker v-model="picker" full-width :landscape="true" :reactive="true" :events="getEntryDates" event-color="green lighten-1"></v-date-picker>
+		</v-flex>
+		<v-flex xs12 class="py-2" v-if="EntryExists">
+			Entry exists
 		</v-flex>
 	</v-layout>
 </template>
@@ -24,62 +13,102 @@
 export default {
 	data(){
 		return {
-			currentDate: new Date(),
-			currentYear: new Date().getFullYear(),
-			currentMonth: new Date().getMonth(),
-			currentDay: new Date().getDate(),
-			dates: [],
-			weeks: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+			picker: new Date().toISOString().substr(0, 10),
+			dataArr: []
 		}
 	},
 	computed:{
-		// First day of the month
-		firstMonthDay(){
-			return (new Date(this.currentYear, this.currentMonth)).getDay()
+		// Current User
+		User(){
+			return this.$__firebase.fireauth.currentUser;
 		},
 
-		calenderDates(){
-			let date = 1;
-			let dateArr = {};
+		// Transactions data document
+		TransactionDoc(){
+			return this.$__firebase.firestore.collection('transactions').doc(this.User.uid).collection('data');
+		},
 
-			for(let j = 0; j <= 6; j++){
-				let tmpArr = [];
-				for(let i = 0; i < 7; i++){
-					if(!tmpArr.hasOwnProperty(i)) tmpArr[i] = [];
-					if(date > this.checkDaysInMonth(this.currentYear, this.currentMonth)){
-						tmpArr[i].push(0);
-						break;
-					}else if(j === 0 && i < this.firstMonthDay){
-						tmpArr[i].push(0);
-					}else{
-						if(date){
-							tmpArr[i].push(date);
-							date++;
-						}
-						
-					}
-				}
-				
-				if(tmpArr.length > 1){
-					if(!dateArr.hasOwnProperty(j)) dateArr[j] = [];
-					dateArr[j] = tmpArr;
+		// Returns transaction arr
+		TransactionArr(){
+			let returnVal = false;
+
+			if(this.dataArr && this.dataArr.length > 0){
+				let expenseValues = this.dataArr.filter(obj => obj.transactionType == 'expense');
+				let incomeValues = this.dataArr.filter(obj => obj.transactionType == 'income');
+
+				if(expenseValues.length > 0 || incomeValues.length > 0){
+					expenseValues = expenseValues.map(obj => {
+						return {...obj, color: 'red'}
+					});
+					incomeValues = incomeValues.map(obj => {
+						return {...obj, color: 'green'}
+					});
+
+					returnVal = {
+						expense: (expenseValues && expenseValues.length > 0) ? expenseValues : [],
+						income: (incomeValues && incomeValues.length > 0) ? incomeValues : [],
+					};
 				}
 			}
 
-			return (Object.keys(dateArr).length > 0) ? dateArr : {};
+			return returnVal;
+		},
+
+		// Check whether current date has any entry or not
+		EntryExists(){
+			if(this.picker && this.TransactionArr){
+				let chkVal = [];
+				Object.keys(this.TransactionArr).forEach(key => {
+					this.TransactionArr[key].forEach(obj => {
+						if(obj.date == this.picker && !chkVal.find(chl => {return (chl.date == this.picker && chl.color == obj.color )})) chkVal.push({date: obj.date, color: obj.color});
+					});
+				});
+
+				if(chkVal.length > 0) return chkVal;
+			}
+
+			return false;
 		}
 	},
 	methods:{
-		// Check days in given month
-		checkDaysInMonth(year, month){
-			const nYear = (year) ? year : this.currentYear;
-			const nMonth = (month) ? month : this.currentMonth;
+		// Get all the data
+		getData(){
+			this.TransactionDoc.orderBy('date', 'desc').get().then(snapshot => {
+				if(!snapshot.empty){
+					snapshot.forEach(doc => {
+						if(doc.exists){
+							const data = doc.data();
+							data.id = doc.id;
 
-			return 32 - new Date(nYear, nMonth, 32).getDate();
+							this.dataArr.push(data);
+						}
+					})
+				}
+			}).catch(err => {
+				this.$store,commit('setSnackMsg', err.message);
+			})
+		},
+
+		// Get the dates with entries
+		getEntryDates(date = false){
+			let returnVal = [];
+			if(this.TransactionArr){
+				Object.keys(this.TransactionArr).forEach(key => {
+					this.TransactionArr[key].forEach(obj => {
+						if(obj.date == date && !returnVal.find(chl => chl.color == obj.color)) returnVal.push(obj.color);
+					});
+				});
+			}
+
+			if(returnVal.length == 0) returnVal = false;
+			else returnVal = Array.from(new Set(returnVal));
+
+			return returnVal;
 		}
 	},
 	mounted(){
-		this.createCalender();
+		// Get the expense data
+		this.getData();
 	}
 }
 </script>
