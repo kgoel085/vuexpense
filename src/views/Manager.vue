@@ -289,7 +289,7 @@ export default {
 				this.UserSettingDoc.collection(obj.collection.toString()).where('del', '==', false).get().then(snapshot => {
 					if(!snapshot.empty){
 						if (refresh) obj.data = []
-						
+
 						snapshot.forEach(doc => {
 							if(doc.exists){
 								const data = doc.data();
@@ -366,7 +366,6 @@ export default {
 		});
 
 		EventBus.$on('SettingsSaved', stat => {
-			console.log('Triggered update')
 			this.getData(true);
 		});
 	},
