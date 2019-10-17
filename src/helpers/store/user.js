@@ -25,7 +25,7 @@ const user = {
 
 	actions: {
 		// Get user saved settings
-		getUserSettings({commit}){
+		async getUserSettings({commit}){
 			const SettingRoute = router.options.routes.find(obj => obj.name == 'settings');
 			const user = firebase.auth().currentUser;
 
@@ -36,9 +36,9 @@ const user = {
 
 				if(DbCollections && typeof DbCollections == 'object' && DbCollections.length > 0){
 					
-					DbCollections.forEach(collection => {
+					DbCollections.forEach(async collection => {
 						const UserSettingsDoc = firebase.firestore().collection('settings').doc(user.uid).collection(collection);
-						UserSettingsDoc.get().then(snapShot => {
+						await UserSettingsDoc.get().then(snapShot => {
 							if(!snapShot.empty){
 								let tmpObj = [];
 								snapShot.forEach(doc => {
