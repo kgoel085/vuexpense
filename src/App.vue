@@ -66,9 +66,13 @@ export default {
       return null;
     }
   },
+  beforeCreate(){
+    // Get user saved settings
+	  this.$store.dispatch('getUserSettings');
+  },
   mounted(){
 	// Get user saved settings
-	this.$store.dispatch('getUserSettings');
+	// this.$store.dispatch('getUserSettings');
 
 	
 	EventBus.$on('showCalc', (stat = false) => {
