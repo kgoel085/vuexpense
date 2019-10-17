@@ -60,7 +60,7 @@
 																	<v-list-tile-content>
 																		<v-layout row wrap style="width: 100%">
 																			<v-flex class="grow">
-																				<span left>{{ entry.description }}</span> <v-chip light small>{{entry.date}}</v-chip>
+																				<span left>{{ entry.description }}</span> <v-chip light small v-if="$vuetify.breakpoint.smAndUp">{{entry.date}}</v-chip>
 																			</v-flex>
 																			<v-flex class="shrink">
 																				<small class="grey--text"> {{UserCurrencySymbol}} {{ entry.amount }}</small>
