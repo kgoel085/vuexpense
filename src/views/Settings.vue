@@ -91,6 +91,7 @@ export default {
 				return Promise.reject(err);
 			}).then(result => {
 				this.$store.dispatch('getUserSettings');
+				EventBus.$emit('SettingsSaved', true);
 				this.$store.commit('setSnackMsg', `${currentRouteName.replace('_', ' ')} updated successfully`);
 				this.$router.push({name: 'settings'});
 			}).catch(err => {

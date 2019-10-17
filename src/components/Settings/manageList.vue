@@ -51,7 +51,7 @@
 
 <script>
 const loader = () => import('../Loader');
-
+import EventBus from './../../helpers/EventBus'
 export default {
 	data(){
 		return {
@@ -135,6 +135,7 @@ export default {
 				title: newItem
 			}).then(result => {
 				this.$store.commit('setSnackMsg', 'Item add success');
+				EventBus.$emit('SettingsSaved', true);
 				this.newItem = null;
 				this.getData(true);
 			}).catch(err => {
@@ -149,6 +150,7 @@ export default {
 			this.loading = true;
 			itemDoc.set(item).then(result => {
 				this.$store.commit('setSnackMsg', 'Item update success');
+				EventBus.$emit('SettingsSaved', true);
 				this.getData(true);
 				this.loading = false;
 			}).catch(err => {
