@@ -78,16 +78,16 @@
 
 		<v-layout row wrap>
 			<v-flex xs12>
-				<v-select :items="PayeeOrPayerData.data" item-text="title" item-value="id" :label="PayeeOrPayerData.name" @input="setPayeePayer" :append-icon="PayeeOrPayerData.icon" @click:append="$router.push({name: PayeeOrPayerData.iconRoute})"></v-select>
+				<v-select :items="PayeeOrPayerData.data" item-text="title" item-value="id" :label="PayeeOrPayerData.name" @input="setPayeePayer" :append-icon="PayeeOrPayerData.icon" @click:append="showSettingPage({name: PayeeOrPayerData.iconRoute})"></v-select>
 			</v-flex>
 			<v-flex xs12>
-				<v-select :items="ExpenseOrIncomeCategory.data" item-text="title" item-value="id" :label="ExpenseOrIncomeCategory.name" v-model="entryValues.category" :append-icon="ExpenseOrIncomeCategory.icon" @click:append="$router.push({name: ExpenseOrIncomeCategory.iconRoute})"></v-select>
+				<v-select :items="ExpenseOrIncomeCategory.data" item-text="title" item-value="id" :label="ExpenseOrIncomeCategory.name" v-model="entryValues.category" :append-icon="ExpenseOrIncomeCategory.icon" @click:append="showSettingPage({name: ExpenseOrIncomeCategory.iconRoute})"></v-select>
 			</v-flex>
 			<v-flex xs12>
-				<v-select :items="PaymentMethods.data" item-text="title" item-value="id" :label="PaymentMethods.name" v-model="entryValues.paymentMethod" :append-icon="PaymentMethods.icon" @click:append="$router.push({name: PaymentMethods.iconRoute})"></v-select>
+				<v-select :items="PaymentMethods.data" item-text="title" item-value="id" :label="PaymentMethods.name" v-model="entryValues.paymentMethod" :append-icon="PaymentMethods.icon" @click:append="showSettingPage({name: PaymentMethods.iconRoute})"></v-select>
 			</v-flex>
 			<v-flex xs12>
-				<v-select :items="statusTypes.data" item-text="title" item-value="id" :label="statusTypes.name" v-model="entryValues.status" :append-icon="statusTypes.icon" @click:append="$router.push({name: statusTypes.iconRoute})"></v-select>
+				<v-select :items="statusTypes.data" item-text="title" item-value="id" :label="statusTypes.name" v-model="entryValues.status" :append-icon="statusTypes.icon" @click:append="showSettingPage({name: statusTypes.iconRoute})"></v-select>
 			</v-flex>
 			<v-flex xs12>
 				<v-textarea
@@ -108,7 +108,7 @@
 					:return-object="false"
 					:label="TagTypes.name"
 					:append-icon="TagTypes.icon" 
-					@click:append="$router.push({name: TagTypes.iconRoute})"
+					@click:append="showSettingPage({name: TagTypes.iconRoute})"
 					multiple
 				></v-select>
 			</v-flex>
@@ -120,11 +120,32 @@
 				</v-slide-y-transition>
 			</v-flex>
 		</v-layout>
+
+		<v-layout row wrap>
+			<v-flex xs12>
+				<v-dialog v-model="modalShow" persistent scrollable>
+					<v-card flat>
+						<v-card-text>
+							<component :is="currentModalComponent" :pgType="currentModalProp"></component>
+						</v-card-text>
+						<v-card-actions>
+							<v-layout row wrap>
+								<v-flex xs12class="text-xs-center">
+									<v-btn class="red white--text" @click="modalShow = false; currentModalProp = null; currentModalComponent = null;" >Close</v-btn>
+								</v-flex>
+							</v-layout>
+						</v-card-actions>
+					</v-card>
+					
+				</v-dialog>
+			</v-flex>
+		</v-layout>
 	</v-container>
 </template>
 
 <script>
 import EventBus from '../helpers/EventBus';
+const manageList = () => import('./../components/Settings/manageList.vue')
 
 export default {
 	data(){
@@ -165,8 +186,16 @@ export default {
 				description: null,
 				tags: [],
 				status: null
-			}
+			},
+
+			// Modal component
+			currentModalProp: null,
+			currentModalComponent: null,
+			modalShow: false
 		}
+	},
+	components: {
+		manageList
 	},
 	watch:{
 		// Reset values
@@ -198,7 +227,7 @@ export default {
 			const name = (this.entryValues.transactionType == 'expense') ? 'Payee' : 'Payer';
 			const iconRoute = (this.entryValues.transactionType == 'expense') ? 'settings.payee_list' : 'settings.payer_list';
 
-			const returnVal = this.getUserSavedData(arrKey);
+			const returnVal = this.getUserSavedData[arrKey];
 			return {name, data: returnVal, iconRoute, icon: 'perm_identity' };
 		},
 
@@ -208,7 +237,7 @@ export default {
 			const iconRoute = (this.entryValues.transactionType == 'expense') ? 'settings.expense_types' : 'settings.income_types';
 			const name = 'Category';
 
-			const returnVal = this.getUserSavedData(arrKey);
+			const returnVal = this.getUserSavedData[arrKey];
 			return {name, data: returnVal, iconRoute, icon: 'style'};
 		},
 
@@ -217,7 +246,7 @@ export default {
 			const arrKey = 'payment_methods';
 			const name = 'Payment Method';
 
-			const returnVal = this.getUserSavedData(arrKey);
+			const returnVal = this.getUserSavedData[arrKey];
 			return {name, data: returnVal, iconRoute: 'settings.payment_methods', icon: 'payment'}; 
 		},
 
@@ -226,7 +255,7 @@ export default {
 			const arrKey = 'entry_status';
 			const name = 'Status';
 
-			const returnVal = this.getUserSavedData(arrKey);
+			const returnVal = this.getUserSavedData[arrKey];
 			return {name, data: returnVal, iconRoute: 'settings.entry_status', icon: 'done_outline'}; 
 		},
 
@@ -235,16 +264,32 @@ export default {
 			const arrKey = 'entry_tags';
 			const name = 'Tags';
 
-			const returnVal = this.getUserSavedData(arrKey);
+			const returnVal = this.getUserSavedData[arrKey];
 			return {name, data: returnVal, iconRoute: 'settings.entry_tags', icon: 'bookmarks'}; 
+		},
+
+		getUserSavedData(){
+			let returnVal = {}
+
+			const settingKeys = ['payee_list', 'payer_list', 'expense_types', 'income_types', 'payment_methods', 'entry_status', 'entry_tags']
+			settingKeys.forEach(key => {
+				const usrData = this.getUserData(key)
+				if(!returnVal.hasOwnProperty(key)) returnVal[key] = []
+
+				returnVal[key] = usrData
+			});
+
+			return returnVal
 		}
 	},
 	methods:{
 		// Get data
-		getData(){
+		getData(refresh = false){
 			this.UserSaveData.forEach(obj => {
 				this.UserSettingDoc.collection(obj.collection.toString()).where('del', '==', false).get().then(snapshot => {
 					if(!snapshot.empty){
+						if (refresh) obj.data = []
+						
 						snapshot.forEach(doc => {
 							if(doc.exists){
 								const data = doc.data();
@@ -262,13 +307,25 @@ export default {
 		},
 
 		// Get user saved data
-		getUserSavedData(key = false){
+		getUserData(key = false){
 			let returnVal = [];
 
 			const currentObj = this.UserSaveData.find(obj => obj.collection === key);
 			if(currentObj && currentObj.hasOwnProperty('data') && currentObj.data.length > 0) returnVal = currentObj.data;
 
 			return returnVal;
+		},
+
+		// Show settings page so that user can enter new values
+		showSettingPage({ name = false }){
+			if (name && name.includes('.')) {
+				const prop = name.split('.').pop()
+				this.currentModalProp = prop
+				this.modalShow = true
+				this.currentModalComponent = 'manageList'
+			}
+
+			return false
 		},
 
 		// Show calculator
@@ -307,9 +364,14 @@ export default {
 			this.entryValues.amount = calVal;
 			this.$store.commit('setNav', true);
 		});
+
+		EventBus.$on('SettingsSaved', stat => {
+			console.log('Triggered update')
+			this.getData(true);
+		});
 	},
 	beforeDestroy(){
-		EventBus.$off(['calcResults']);
+		EventBus.$off(['calcResults', 'SettingsSaved']);
 	}
 }
 </script>
