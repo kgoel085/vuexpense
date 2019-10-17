@@ -3,9 +3,42 @@
 		<v-flex xs12 class="py-2">
 			<v-date-picker v-model="picker" full-width :landscape="true" :reactive="true" :events="getEntryDates" event-color="green lighten-1"></v-date-picker>
 		</v-flex>
-		<v-flex xs12 class="py-2" v-if="EntryExists">
-			Entry exists
-		</v-flex>
+		<v-slide-y-transition>
+			<v-flex xs12 class="py-2" v-if="EntryExists && EntryArr">
+				<v-layout row wrap>
+					<v-flex class="grow pa-1 " v-for="(item, indx) in this.EntryArr" :key="indx">
+						<v-card flat>
+							<v-card-title>
+								<v-layout row wrap>
+									<v-flex class="grow ">
+										<h3>{{indx | uppercase}}</h3>
+									</v-flex>
+									<v-flex class="shrink display-1">
+										<span :class="item.color+'--text'"> {{ UserData.getCurrency(item['total']) }} </span>
+									</v-flex>
+								</v-layout>
+							</v-card-title>
+							<v-card-text class="pa-0 ma-0 ">
+								<v-list >
+									<v-list-tile avatar v-for="cItem in item" :key="cItem.amount">
+										<v-layout row class="grey--text">
+											<v-flex class="grow">
+												{{ UserData['find'+indx](cItem.category) }}
+												<br />
+												<small>{{ cItem.description | truncate(50) }}</small>
+											</v-flex>
+											<v-flex class="shrink">
+												<span>{{ UserData.getCurrency(cItem['amount']) }}</span>
+											</v-flex>
+										</v-layout>
+									</v-list-tile>
+								</v-list>
+							</v-card-text>
+						</v-card>
+					</v-flex>
+				</v-layout>
+			</v-flex>
+		</v-slide-y-transition>
 	</v-layout>
 </template>
 
@@ -21,6 +54,34 @@ export default {
 		// Current User
 		User(){
 			return this.$__firebase.fireauth.currentUser;
+		},
+
+		// User functions for data retrieval
+		UserData(){
+			const { currency, expense_types, income_types  } = this.$store.getters.UserSavedSettings
+
+			const findexpense = expense => {
+				const findObj = expense_types.find(obj => obj.id == expense)
+				if(findObj) return findObj.title
+
+				return 'Others'
+			}
+			const findincome = income => {
+				const findObj = income_types.find(obj => obj.id == income)
+				if(findObj) return findObj.title
+
+				return 'Others'
+			}
+
+			const getCurrency = val => {
+				const currencyObj = currency
+				let currencySymbol = ''
+				if (currencyObj && currencyObj.hasOwnProperty(0) && currencyObj[0].hasOwnProperty('symbol')) currencySymbol = currencyObj[0].symbol
+
+				return ` ${currencySymbol} ${val} `
+			}
+
+			return { getCurrency, findexpense, findincome }
 		},
 
 		// Transactions data document
@@ -68,8 +129,40 @@ export default {
 			}
 
 			return false;
+		},
+
+		// Returns a normalized entry array
+		EntryArr(){
+			let returnVal
+			if(this.EntryExists){
+				returnVal = {}
+				this.EntryExists.forEach (obj => {
+					const objKey = (obj.color === 'red') ? 'expense' : 'income'
+					const findObj = this.TransactionArr[objKey].find(fObj => fObj.date === obj.date)
+					
+					if(findObj){
+						if(!returnVal.hasOwnProperty(objKey)) returnVal[objKey] = []
+						returnVal[objKey].push(findObj)
+						returnVal[objKey].color = obj.color
+					}
+				})
+
+				if (Object.keys(returnVal).length > 0) {
+					for (let key in returnVal) {
+						const currentObj = returnVal[key]
+						if (currentObj) {
+							let total = 0
+							currentObj.forEach(obj => total += obj.amount)
+							returnVal[key]['total'] = total
+						}	
+					}
+				}
+			}
+
+			return returnVal;
 		}
 	},
+
 	methods:{
 		// Get all the data
 		getData(){
