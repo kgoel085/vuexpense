@@ -16,7 +16,7 @@ import fBase from './helpers/firebase';
 Vue.config.productionTip = false
 
 // Only mount app, if firebase auth object is ready to use
-fBase.fireauth.onAuthStateChanged(usr => {
+fBase.fireauth.onAuthStateChanged(async usr => {
   // Default route path
   let routeObj = {name: 'login'};
 
@@ -24,7 +24,7 @@ fBase.fireauth.onAuthStateChanged(usr => {
   let userObj = (usr) ? usr : false;
   store.commit('setUser', userObj);
 
-  if(userObj) store.dispatch('getUserSettings', userObj);
+  if(userObj) await store.dispatch('getUserSettings', userObj);
 
   // Render the app
   new Vue({
