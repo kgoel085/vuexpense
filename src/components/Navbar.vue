@@ -84,7 +84,7 @@
 					v-for="item in menuItems"
 					:key="item.title"
 					avatar
-					@click="$router.push(item.to)"
+					@click="$router.push(item.to); $store.commit('setView')"
 				>
 					<!-- <v-list-tile-avatar>
 						<img src="https://cdn.vuetifyjs.com/images/lists/3.jpg">
