@@ -1,7 +1,7 @@
 <template>
 	<v-layout row wrap>
 		<v-flex xs12 class="py-2">
-			<v-date-picker v-model="picker" full-width :landscape="true" :reactive="true" :events="getEntryDates" event-color="green lighten-1"></v-date-picker>
+			<v-date-picker v-model="picker" full-width :landscape="$vuetify.breakpoint.smAndUp" :reactive="true" :events="getEntryDates" event-color="green lighten-1"></v-date-picker>
 		</v-flex>
 		<v-slide-y-transition>
 			<v-flex xs12 class="py-2" v-if="EntryExists && EntryArr">
