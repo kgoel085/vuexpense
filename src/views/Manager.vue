@@ -78,7 +78,7 @@
 
 		<v-layout row wrap>
 			<v-flex xs12>
-				<v-select :items="PayeeOrPayerData.data" item-text="title" item-value="id" :label="PayeeOrPayerData.name" @input="setPayeePayer" :append-icon="PayeeOrPayerData.icon" @click:append="showSettingPage({name: PayeeOrPayerData.iconRoute})"></v-select>
+				<v-select :items="PayeeOrPayerData.data" item-text="title" item-value="id" :label="PayeeOrPayerData.name" :append-icon="PayeeOrPayerData.icon" @click:append="showSettingPage({name: PayeeOrPayerData.iconRoute})" v-model="entryValues.identity"></v-select>
 			</v-flex>
 			<v-flex xs12>
 				<v-select :items="ExpenseOrIncomeCategory.data" item-text="title" item-value="id" :label="ExpenseOrIncomeCategory.name" v-model="entryValues.category" :append-icon="ExpenseOrIncomeCategory.icon" @click:append="showSettingPage({name: ExpenseOrIncomeCategory.iconRoute})"></v-select>
@@ -177,8 +177,7 @@ export default {
 			entryValues: {
 				amount: 0,	// Amount
 				transactionType: 'expense',	// Current selected transaction type
-				payer: null,
-				payee: null,
+				identity: null,
 				date: new Date().toISOString().substr(0, 10),
 				time: null,
 				category: null,
@@ -200,9 +199,11 @@ export default {
 	watch:{
 		// Reset values
 		'entryValues.transactionType'(val){
-			this.entryValues.payer = null;
-			this.entryValues.payee = null;
-			this.entryValues.category = null;
+			if(!this.editId){
+				this.entryValues.payer = null;
+				this.entryValues.payee = null;
+				this.entryValues.category = null;
+			}
 		}
 	},
 	computed:{
@@ -280,10 +281,33 @@ export default {
 			});
 
 			return returnVal
+		},
+
+		// Edit a received id data
+		editId(){
+			const editId = (this.$route.query.entry) ? this.$route.query.entry : false
+			return editId
 		}
 	},
 	methods:{
-		// Get data
+		// Fetch data for received edit id 
+		fetchData(id = false){
+			if (id) {
+				const transDoc = this.$__firebase.firestore.collection('transactions').doc(this.User.uid).collection('data').doc(id);
+				transDoc.get().then(doc => {
+					if (doc.exists) {
+						const data = doc.data()
+						if(data) data.id = doc.id
+
+						this.entryValues = data
+					}
+				})
+			}
+
+			return false
+		},
+
+		// Get user saved configuration data
 		getData(refresh = false){
 			this.UserSaveData.forEach(obj => {
 				this.UserSettingDoc.collection(obj.collection.toString()).where('del', '==', false).get().then(snapshot => {
@@ -333,20 +357,12 @@ export default {
 			EventBus.$emit('showCalc', true);
 		},
 
-		// Set payer / payee
-		setPayeePayer(val = false){
-			if(!val) return false;
-
-			const key = (this.entryValues.transactionType == 'expense') ? 'payee' : 'payer';
-			this.entryValues[key] = val;
-		},
-
 		// Save user entry
 		saveEntry(){
 			let dataEntry = this.entryValues;
 			if(dataEntry.hasOwnProperty('amount')) dataEntry.amount = parseInt(dataEntry.amount);
 
-			const newDoc = this.SaveDoc.doc();
+			const newDoc = (this.editId) ? this.SaveDoc.doc(this.editId) : this.SaveDoc.doc();
 			newDoc.set(dataEntry).then(result => {
 				this.$store.commit('setSnackMsg', 'Entry success');
 				this.$router.push({name: 'home'});
@@ -358,6 +374,9 @@ export default {
 	mounted(){
 		// Get user saved data
 		this.getData();
+
+		// Fetch requested data
+		if(this.editId) this.fetchData(this.editId);
 
 		// Calculator results
 		EventBus.$on('calcResults', calVal => {

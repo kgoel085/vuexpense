@@ -22,6 +22,11 @@
 								<v-list >
 									<v-list-tile avatar v-for="cItem in item" :key="cItem.amount">
 										<v-layout row class="grey--text">
+											<v-flex class="shrink">
+												<v-btn flat small fab class="secondary" @click="editEntry(cItem.id)">
+													<v-icon>edit</v-icon>
+												</v-btn>
+											</v-flex>
 											<v-flex class="grow">
 												{{ UserData['find'+indx](cItem.category) }}
 												<br />
@@ -197,6 +202,11 @@ export default {
 			else returnVal = Array.from(new Set(returnVal));
 
 			return returnVal;
+		},
+
+		// Edit a single entry
+		editEntry(id) {
+			this.$router.push({name: 'manager', query: {entry: id}})
 		}
 	},
 	mounted(){
