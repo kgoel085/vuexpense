@@ -95,7 +95,10 @@
 				</v-card>
 			</v-flex>
 			<v-flex xs12>
-				<v-select :items="ChartTimeArr" item-value="value" item-text="name" v-model="ChartTimeType" @input="createChartData"></v-select>
+				<v-card flat>
+					<v-select :items="ChartTimeArr" item-value="value" item-text="name" v-model="ChartTimeType" @input="createChartData" class="pa-4" label="Select time period"></v-select>
+				</v-card>
+				
 			</v-flex>
 			<v-flex class="grow">
 				<v-card flat>
