@@ -2,7 +2,15 @@
 	<v-container>
 		<v-layout row wrap>
 			<v-flex xs12 class="py-2">
-				<h2>Add Expense / Income</h2>
+				<v-layout row wrap>
+					<v-flex class="grow">
+						<h2>Add Expense / Income</h2>
+					</v-flex>
+					<v-flex class="shrink">
+						<loader class="ma-0" v-if="loading"></loader>
+					</v-flex>
+				</v-layout>
+			
 			</v-flex>
 
 			<!-- Drop-down -->
@@ -146,6 +154,7 @@
 <script>
 import EventBus from '../helpers/EventBus';
 const manageList = () => import('./../components/Settings/manageList.vue')
+const loader = () => import('./../components/Loader')
 
 export default {
 	data(){
@@ -190,11 +199,15 @@ export default {
 			// Modal component
 			currentModalProp: null,
 			currentModalComponent: null,
-			modalShow: false
+			modalShow: false,
+
+			// Request loading
+			loading: false
 		}
 	},
 	components: {
-		manageList
+		manageList,
+		loader
 	},
 	watch:{
 		// Reset values
@@ -293,6 +306,7 @@ export default {
 		// Fetch data for received edit id 
 		fetchData(id = false){
 			if (id) {
+				this.loading = true;
 				const transDoc = this.$__firebase.firestore.collection('transactions').doc(this.User.uid).collection('data').doc(id);
 				transDoc.get().then(doc => {
 					if (doc.exists) {
@@ -300,7 +314,11 @@ export default {
 						if(data) data.id = doc.id
 
 						this.entryValues = data
+						this.loading = false;
 					}
+				}).catch(err => {
+					this.$store.commit('setSnackMsg', err.message)
+					this.loading = false;
 				})
 			}
 
@@ -362,12 +380,15 @@ export default {
 			let dataEntry = this.entryValues;
 			if(dataEntry.hasOwnProperty('amount')) dataEntry.amount = parseInt(dataEntry.amount);
 
+			this.loading = true;
 			const newDoc = (this.editId) ? this.SaveDoc.doc(this.editId) : this.SaveDoc.doc();
 			newDoc.set(dataEntry).then(result => {
 				this.$store.commit('setSnackMsg', 'Entry success');
 				this.$router.push({name: 'home'});
+				this.loading = false;
 			}).catch(err => {
 				this.$store.commit('setSnackMsg', err.message);
+				this.loading = false;
 			});
 		}
 	},
