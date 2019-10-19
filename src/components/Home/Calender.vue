@@ -24,7 +24,7 @@
 										<v-layout row class="grey--text">
 											<v-flex class="shrink">
 												<v-btn flat small fab class="secondary" @click="editEntry(cItem.id)">
-													<v-icon>edit</v-icon>
+													<v-icon class="pa-2">edit</v-icon>
 												</v-btn>
 											</v-flex>
 											<v-flex class="grow">

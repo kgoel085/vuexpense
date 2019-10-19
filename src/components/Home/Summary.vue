@@ -10,7 +10,7 @@
 								<h3>Current Balance</h3>
 							</v-flex>
 							<v-flex class="shrink">
-								<strong class="success--text">{{ UserCurrencySymbol }}  {{ parseInt(TotalExpenses.total) ? TotalExpenses.total : 0 }}</strong>
+								<strong class="success--text display-1">{{ UserCurrencySymbol }}  {{ parseInt(TotalExpenses.total) ? TotalExpenses.total : 0 }}</strong>
 							</v-flex>
 						</v-layout>
 					</v-card-title>
@@ -55,20 +55,28 @@
 
 													<v-card flat>
 														<v-card-text>
-															<v-list>
-																<v-list-tile v-for="entry in childItem" :key="entry.id">
-																	<v-list-tile-content>
-																		<v-layout row wrap style="width: 100%">
-																			<v-flex class="grow">
-																				<span left>{{ entry.description }}</span> <v-chip light small v-if="$vuetify.breakpoint.smAndUp">{{entry.date}}</v-chip>
-																			</v-flex>
-																			<v-flex class="shrink">
-																				<small class="grey--text"> {{UserCurrencySymbol}} {{ entry.amount }}</small>
-																			</v-flex>
-																		</v-layout>
-																	</v-list-tile-content>
-																</v-list-tile>
-															</v-list>
+															<template v-if="childItem.length == 0">
+																<v-alert :value="true" type="warning">
+																	No records found !
+																</v-alert>
+															</template>
+															<template v-else>
+																<v-list>
+																	<v-list-tile v-for="entry in childItem" :key="entry.id">
+																		<v-list-tile-content>
+																			<v-layout row wrap style="width: 100%">
+																				<v-flex class="grow">
+																					<span left>{{ entry.description }}</span> <v-chip light small v-if="$vuetify.breakpoint.smAndUp">{{entry.date}}</v-chip>
+																				</v-flex>
+																				<v-flex class="shrink">
+																					<small class="grey--text"> {{UserCurrencySymbol}} {{ entry.amount }}</small>
+																				</v-flex>
+																			</v-layout>
+																		</v-list-tile-content>
+																	</v-list-tile>
+																</v-list>
+															</template>
+															
 														</v-card-text>	
 													</v-card>
 												</v-expansion-panel-content>
