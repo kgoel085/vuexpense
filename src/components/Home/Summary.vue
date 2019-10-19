@@ -1,9 +1,6 @@
 <template>
 	<v-container fluid>
 		<v-layout row wrap>
-			<!-- <v-flex xs12>
-				<LineChart :chart-data="{}"></LineChart>
-			</v-flex> -->
 			<v-flex xs12>
 				<v-card flat>
 					<v-card-title>
@@ -97,21 +94,66 @@
 					</v-card-text>
 				</v-card>
 			</v-flex>
+			<v-flex xs12>
+				<v-select :items="ChartTimeArr" item-value="value" item-text="name" v-model="ChartTimeType" @input="createChartData"></v-select>
+			</v-flex>
+			<v-flex class="grow">
+				<v-card flat>
+					<v-card-title>
+						<h3>{{ ChartTimeType | capitalize }} Expense / Income</h3>
+					</v-card-title>
+					<v-card-text>
+						<template v-if="!BarChartDataArr">
+							<v-alert type="warning" :value="true">
+								No Input found
+							</v-alert>
+						</template>
+						<BarChart v-else :chartData="BarChartDataArr" :options="{ responsive: false}" :key="ChartTimeType"></BarChart>
+					</v-card-text>
+				</v-card>
+			</v-flex>
+			<v-flex class="grow">
+				<v-card flat>
+					<v-card-title>
+						<h3>{{ ChartTimeType | capitalize }} Expense / Income categories</h3>
+					</v-card-title>
+					<v-card-text>
+						<template v-if="!PolarChartDataArr">
+							<v-alert type="warning" :value="true">
+								No Input found
+							</v-alert>
+						</template>
+						<PolarChart v-else :chartData="PolarChartDataArr" :options="{ responsive: false}" :key="ChartTimeType"></PolarChart>
+					</v-card-text>
+				</v-card>
+			</v-flex>
 		</v-layout>
 	</v-container>
 </template>
 
 <script>
-import chart from './../../helpers/charts'
+import PolarChart from './../Charts/PolarAreaChart'
+import Bar from './../Charts/BarChart'
 export default {
 	data(){
 		return{
 			// Stores user entered data
 			dataArr: [],
+
+			// Polar chart data
+			PolarChartData: {},
+
+			// Bar chart data
+			BarChartData: {},
+
+			// Chart data time line
+			ChartTimeArr: [{name: 'Yearly', value: 'yearly'}, {name: 'Monthly', value: 'monthly'}, {name: 'Weekly', value: 'weekly'}],
+			ChartTimeType: 'weekly'
 		}
 	},
 	components:{
-		LineChart: chart.LineChart
+		PolarChart,
+		BarChart: Bar
 	},
 	computed:{
 		// Current User
@@ -184,6 +226,14 @@ export default {
 				{...this.filterData('monthly')},
 				{...this.filterData('yearly')},
 			]
+		},
+
+		BarChartDataArr(){
+			return this.BarChartData
+		},
+
+		PolarChartDataArr(){
+			return this.PolarChartData
 		}
 	},
 	methods:{
@@ -199,9 +249,11 @@ export default {
 							this.dataArr.push(data);
 						}
 					})
+
+					this.createChartData()
 				}
 			}).catch(err => {
-				this.$store,commit('setSnackMsg', err.message);
+				this.$store.commit('setSnackMsg', err.message);
 			})
 		},
 
@@ -288,6 +340,64 @@ export default {
 			if(!id) return false
 
 			this.$router.push({name: 'manager', query: {entry: id}})
+		},
+
+		createChartData(timeline = 'weekly'){
+			if (!timeline) timeline = this.ChartTimeType
+
+			const dataArr = this.filterData(timeline)
+			console.log(dataArr, timeline)
+			if (dataArr && Object.keys(dataArr.data).length > 0) {
+				const finalObj = {
+					bar: {
+						labels: ['Type'],
+						datasets: []
+					},
+					polar:{
+						labels: [],
+						datasets:[],
+						data: {}
+					}
+				}
+
+				Object.keys(dataArr.data).forEach(type => {
+					const { total, category } = dataArr.data[type]
+					const currentObj = dataArr.data[type]
+
+					const totalAmount = (total) ? total : 0
+					//if (!finalObj.labels.includes(type)) finalObj.labels.push(type)
+					
+					if (totalAmount > 0) {
+						finalObj['bar'].datasets.push({
+							label: type,
+							data: [ totalAmount ],
+							backgroundColor: (type == 'expense') ? '#f87979' : '#008000'
+						})
+					}
+
+					const totalObj = currentObj.length
+					currentObj.forEach(obj => {
+						if (obj.category) {
+							const categoryType = (type == 'expense') ? 'expense_types' : 'income_types'
+							const {title: categoryName} = this.UserSettings[categoryType].find(objC => objC.id === obj.category)
+							if (categoryName && !finalObj['polar']['labels'].includes(categoryName)) finalObj['polar']['labels'].push(categoryName)
+
+
+							if(!finalObj['polar']['data'].hasOwnProperty(categoryName)) finalObj['polar']['data'][categoryName] = 0
+							finalObj['polar']['data'][categoryName] += obj.amount
+						}
+					});
+
+					if (Object.keys(finalObj['polar']['data']).length > 0) {
+						finalObj['polar']['datasets'] = [{ data: Object.values(finalObj['polar']['data']) }]
+					}
+				})
+
+				this.BarChartData = finalObj['bar']
+				this.PolarChartData = finalObj['polar']
+			}
+
+			return {}
 		}
 	},
 	mounted(){
