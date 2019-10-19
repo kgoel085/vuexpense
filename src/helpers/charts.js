@@ -19,6 +19,4 @@ Object.keys(chart).forEach(chartType => {
   chartExport[`${chartType}Chart`] = cType
 })
 
-console.log(chartExport)
-
-export default {...chartExport}
+export default chartExport
