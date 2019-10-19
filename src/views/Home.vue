@@ -10,7 +10,9 @@
 		<v-flex xs12>
 			<!-- Current tab component -->
 			<!-- <component :is="CurrentComponent" :key="currentTab"></component> -->
-			<router-view :key="currentTab"></router-view>
+			<keep-alive>
+				<router-view :key="currentTab"></router-view>
+			</keep-alive>
 		</v-flex>
 	</v-container>
 </template>
