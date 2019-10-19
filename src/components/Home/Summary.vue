@@ -147,7 +147,8 @@ export default {
 
 		// Stores the total expense / income for current data
 		TotalExpenses(){
-			let expenseTotal, incomeTotal = 0;
+			let expenseTotal = 0
+			let incomeTotal = 0;
 
 			if(this.TransactionArr){
 				const expenseNumbers = this.TransactionArr['expense'].map(obj => {
