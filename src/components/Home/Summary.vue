@@ -1,6 +1,9 @@
 <template>
 	<v-container fluid>
 		<v-layout row wrap>
+			<!-- <v-flex xs12>
+				<LineChart :chart-data="{}"></LineChart>
+			</v-flex> -->
 			<v-flex xs12>
 				<v-card flat>
 					<v-card-title>
@@ -99,12 +102,16 @@
 </template>
 
 <script>
+import chart from './../../helpers/charts'
 export default {
 	data(){
 		return{
 			// Stores user entered data
 			dataArr: [],
 		}
+	},
+	components:{
+		LineChart: chart.LineChart
 	},
 	computed:{
 		// Current User
