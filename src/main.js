@@ -24,7 +24,7 @@ fBase.fireauth.onAuthStateChanged(async usr => {
   let userObj = (usr) ? usr : false;
   store.commit('setUser', userObj);
 
-  if(userObj) await store.dispatch('getUserSettings', userObj);
+  if(userObj) store.dispatch('getUserSettings', userObj);
 
   // Render the app
   new Vue({
