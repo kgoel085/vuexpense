@@ -65,6 +65,11 @@
 																	<v-list-tile v-for="entry in childItem" :key="entry.id">
 																		<v-list-tile-content>
 																			<v-layout row wrap style="width: 100%">
+																				<v-flex class="shrink">
+																					<v-btn fab flat small class="transparent" @click="editEntry(entry.id)">
+																						<v-icon class="pa-2">edit</v-icon>
+																					</v-btn>
+																				</v-flex>
 																				<v-flex class="grow">
 																					<span left>{{ entry.description }}</span> <v-chip light small v-if="$vuetify.breakpoint.smAndUp">{{entry.date}}</v-chip>
 																				</v-flex>
@@ -269,6 +274,13 @@ export default {
 			}
 
 			return returnVal;
+		},
+
+		// Edit entry
+		editEntry(id = false){
+			if(!id) return false
+
+			this.$router.push({name: 'manager', query: {entry: id}})
 		}
 	},
 	mounted(){
