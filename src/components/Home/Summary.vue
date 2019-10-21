@@ -362,7 +362,8 @@ export default {
 					polar:{
 						labels: [],
 						datasets:[],
-						data: {}
+						data: {},
+						backgroundColor: []
 					}
 				}
 
@@ -385,17 +386,19 @@ export default {
 					currentObj.forEach(obj => {
 						if (obj.category) {
 							const categoryType = (type == 'expense') ? 'expense_types' : 'income_types'
-							const {title: categoryName} = this.UserSettings[categoryType].find(objC => objC.id === obj.category)
+							const {title: categoryName, color} = this.UserSettings[categoryType].find(objC => objC.id === obj.category)
 							if (categoryName && !finalObj['polar']['labels'].includes(categoryName)) finalObj['polar']['labels'].push(categoryName)
-
 
 							if(!finalObj['polar']['data'].hasOwnProperty(categoryName)) finalObj['polar']['data'][categoryName] = 0
 							finalObj['polar']['data'][categoryName] += obj.amount
+
+							const catColor = `rgba(${color.r || 255}, ${color.g || 0}, ${color.b || 0}, ${color.a || 0})`
+							finalObj['polar']['backgroundColor'].push(catColor)
 						}
 					});
 
 					if (Object.keys(finalObj['polar']['data']).length > 0) {
-						finalObj['polar']['datasets'] = [{ data: Object.values(finalObj['polar']['data']) }]
+						finalObj['polar']['datasets'] = [{ data: Object.values(finalObj['polar']['data']), backgroundColor: finalObj['polar']['backgroundColor'] }]
 					}
 				})
 
