@@ -62,6 +62,7 @@ export default {
 	methods:{
 		// Load the selected settings
 		triggerNav(route = false){
+			EventBus.$emit('NavChanged', true)
 			this.$router.push({name: route});
 		},
 

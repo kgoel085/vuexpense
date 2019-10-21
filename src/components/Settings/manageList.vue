@@ -32,7 +32,12 @@
 									<v-flex xs12 v-for="item in dataArr" :key="item.id">
 										<v-layout row wrap>
 											<v-flex class="grow">
-												<v-text-field single-line v-model="item.title" :append-icon="(item.title) ? 'save': ''"  @click:append="updateItem(item)" @keyup.native.enter="updateItem(item)"></v-text-field>
+												<v-layout row wrap>
+													<v-flex class="grow">
+														<v-text-field single-line v-model="item.title" :append-icon="(item.title) ? 'save': ''"  @click:append="updateItem(item)" @keyup.native.enter="updateItem(item)"></v-text-field>
+														<ColorPicker v-model="item.color"></ColorPicker>
+													</v-flex>
+												</v-layout>
 											</v-flex>
 											<v-flex class="shrink pa-1">
 												<v-switch v-model="item.del" :label="`Currently ${(!item.del) ? 'active' : 'inactive'}`" @change="updateItem(item)"></v-switch>
@@ -52,6 +57,7 @@
 <script>
 const loader = () => import('../Loader');
 import EventBus from './../../helpers/EventBus'
+import { Slider } from 'vue-color'
 export default {
 	data(){
 		return {
@@ -62,11 +68,13 @@ export default {
 			filterArr: [
 				{text: 'Active', value: false},
 				{text: 'Inactive', value: true},
-			]
+			],
+			colors: { r: 255, g: 0, b: 0 }
 		}
 	},
 	components:{
-		loader
+		loader,
+		ColorPicker: Slider
 	},
 	computed:{
 		// Set Page DB settings based on props
@@ -105,6 +113,7 @@ export default {
 						const data = doc.data();
 						data.id = doc.id;
 
+						if(!data.hasOwnProperty('color')) data.color = {}
 						if(!this.dataArr.find(obj => obj.id === data.id)) this.dataArr.push(data);
 					});
 				}
@@ -146,12 +155,17 @@ export default {
 		updateItem(item = false){
 			if(!item) return false;
 
+			if(item.hasOwnProperty('color')){
+				const { rgba } = item.color
+				if(rgba) item.color = rgba
+			}
+
 			const itemDoc = this.MasterDoc.doc(item.id);
 			this.loading = true;
 			itemDoc.set(item).then(result => {
 				this.$store.commit('setSnackMsg', 'Item update success');
 				EventBus.$emit('SettingsSaved', true);
-				this.getData(true);
+				// this.getData(true);
 				this.loading = false;
 			}).catch(err => {
 				this.$store.commit('setSnackMsg', err.message);
@@ -161,6 +175,11 @@ export default {
 	},
 	mounted(){
 		this.getData(true);
+
+		// Trigger nav change, so clean the object
+		EventBus.$on('NavChanged', stat => {
+			this.dataArr = []
+		})
 	},
 	beforeDestroy(){
 		this.dataArr = [];
