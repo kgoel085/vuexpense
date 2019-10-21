@@ -100,7 +100,7 @@
 				</v-card>
 				
 			</v-flex>
-			<v-flex class="grow">
+			<v-flex xs12 md6>
 				<v-card flat :height="containerHeight">
 					<v-card-title>
 						<h3>{{ ChartTimeType | capitalize }} Expense / Income</h3>
@@ -115,7 +115,7 @@
 					</v-card-text>
 				</v-card>
 			</v-flex>
-			<v-flex class="grow">
+			<v-flex xs12 md6>
 				<v-card flat  :height="containerHeight">
 					<v-card-title>
 						<h3>{{ ChartTimeType | capitalize }} Expense / Income categories</h3>
