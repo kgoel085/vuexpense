@@ -101,7 +101,7 @@
 				
 			</v-flex>
 			<v-flex class="grow">
-				<v-card flat>
+				<v-card flat :height="containerHeight">
 					<v-card-title>
 						<h3>{{ ChartTimeType | capitalize }} Expense / Income</h3>
 					</v-card-title>
@@ -111,12 +111,12 @@
 								No Input found
 							</v-alert>
 						</template>
-						<BarChart v-else :chartData="BarChartDataArr" :options="{ responsive: false}" :key="ChartTimeType"></BarChart>
+						<BarChart v-else :chartData="BarChartDataArr" :key="ChartTimeType"></BarChart>
 					</v-card-text>
 				</v-card>
 			</v-flex>
 			<v-flex class="grow">
-				<v-card flat>
+				<v-card flat  :height="containerHeight">
 					<v-card-title>
 						<h3>{{ ChartTimeType | capitalize }} Expense / Income categories</h3>
 					</v-card-title>
@@ -126,7 +126,7 @@
 								No Input found
 							</v-alert>
 						</template>
-						<PolarChart v-else :chartData="PolarChartDataArr" :options="{ responsive: false}" :key="ChartTimeType"></PolarChart>
+						<PolarChart v-else :chartData="PolarChartDataArr" :key="ChartTimeType"></PolarChart>
 					</v-card-text>
 				</v-card>
 			</v-flex>
@@ -237,6 +237,10 @@ export default {
 
 		PolarChartDataArr(){
 			return this.PolarChartData
+		},
+
+		containerHeight(){
+			return this.$vuetify.breakpoint.height
 		}
 	},
 	methods:{
@@ -349,7 +353,6 @@ export default {
 			if (!timeline) timeline = this.ChartTimeType
 
 			const dataArr = this.filterData(timeline)
-			console.log(dataArr, timeline)
 			if (dataArr && Object.keys(dataArr.data).length > 0) {
 				const finalObj = {
 					bar: {
