@@ -96,7 +96,7 @@
 			</v-flex>
 			<v-flex xs12>
 				<v-card flat>
-					<v-select :items="ChartTimeArr" item-value="value" item-text="name" v-model="ChartTimeType" @input="createChartData" class="pa-4" label="Select time period"></v-select>
+					<v-select :items="ChartTimeArr" item-value="value" item-text="name" v-model="ChartTimeType" class="pa-4" label="Select time period"></v-select>
 				</v-card>
 				
 			</v-flex>
@@ -106,12 +106,12 @@
 						<h3>{{ ChartTimeType | capitalize }} Expense / Income</h3>
 					</v-card-title>
 					<v-card-text>
-						<template v-if="!BarChartDataArr">
+						<template v-if="!ExpenseIncomeDataArr">
 							<v-alert type="warning" :value="true">
 								No Input found
 							</v-alert>
 						</template>
-						<BarChart v-else :chartData="BarChartDataArr" :key="ChartTimeType"></BarChart>
+						<BarChart v-else :chartData="ExpenseIncomeDataArr" :key="ChartTimeType"></BarChart>
 					</v-card-text>
 				</v-card>
 			</v-flex>
@@ -121,12 +121,12 @@
 						<h3>{{ ChartTimeType | capitalize }} Expense / Income categories</h3>
 					</v-card-title>
 					<v-card-text>
-						<template v-if="!PolarChartDataArr">
+						<template v-if="!CategoryChartDataArr">
 							<v-alert type="warning" :value="true">
 								No Input found
 							</v-alert>
 						</template>
-						<PolarChart v-else :chartData="PolarChartDataArr" :key="ChartTimeType"></PolarChart>
+						<BarChart v-else :chartData="CategoryChartDataArr" :key="ChartTimeType"></BarChart>
 					</v-card-text>
 				</v-card>
 			</v-flex>
@@ -143,11 +143,11 @@ export default {
 			// Stores user entered data
 			dataArr: [],
 
-			// Polar chart data
-			PolarChartData: {},
+			// Expense / Income categories data
+			CategoryChartData: {},
 
 			// Bar chart data
-			BarChartData: {},
+			ExpenseIncomeData: {},
 
 			// Chart data time line
 			ChartTimeArr: [{name: 'Yearly', value: 'yearly'}, {name: 'Monthly', value: 'monthly'}, {name: 'Weekly', value: 'weekly'}],
@@ -157,6 +157,12 @@ export default {
 	components:{
 		PolarChart,
 		BarChart: Bar
+	},
+	watch:{
+		ChartTimeType(val){
+			this.createExpenseIncomeCatChart()
+			this.createExpenseIncomeChart()
+		}
 	},
 	computed:{
 		// Current User
@@ -231,12 +237,12 @@ export default {
 			]
 		},
 
-		BarChartDataArr(){
-			return this.BarChartData
+		ExpenseIncomeDataArr(){
+			return this.ExpenseIncomeData
 		},
 
-		PolarChartDataArr(){
-			return this.PolarChartData
+		CategoryChartDataArr(){
+			return this.CategoryChartData
 		},
 
 		containerHeight(){
@@ -257,7 +263,9 @@ export default {
 						}
 					})
 
-					this.createChartData()
+					// this.createChartData()
+					this.createExpenseIncomeChart()
+					this.createExpenseIncomeCatChart()
 				}
 			}).catch(err => {
 				this.$store.commit('setSnackMsg', err.message);
@@ -349,61 +357,70 @@ export default {
 			this.$router.push({name: 'manager', query: {entry: id}})
 		},
 
-		createChartData(timeline = 'weekly'){
+		// Create expense income chart data
+		createExpenseIncomeChart(timeline = 'weekly'){
 			if (!timeline) timeline = this.ChartTimeType
 
 			const dataArr = this.filterData(timeline)
 			if (dataArr && Object.keys(dataArr.data).length > 0) {
 				const finalObj = {
-					bar: {
-						labels: ['Type'],
-						datasets: []
-					},
-					polar:{
-						labels: [],
-						datasets:[],
-						data: {},
-						backgroundColor: []
-					}
+					labels: ['Expense / Income percentage'],
+					datasets: []
 				}
 
 				Object.keys(dataArr.data).forEach(type => {
 					const { total, category } = dataArr.data[type]
-					const currentObj = dataArr.data[type]
-
 					const totalAmount = (total) ? total : 0
-					//if (!finalObj.labels.includes(type)) finalObj.labels.push(type)
-					
+
 					if (totalAmount > 0) {
-						finalObj['bar'].datasets.push({
+						finalObj.datasets.push({
 							label: type,
 							data: [ totalAmount ],
 							backgroundColor: (type == 'expense') ? '#f87979' : '#008000'
 						})
 					}
-
-					const totalObj = currentObj.length
-					currentObj.forEach(obj => {
-						if (obj.category) {
-							const categoryType = (type == 'expense') ? 'expense_types' : 'income_types'
-							const {title: categoryName, color} = this.UserSettings[categoryType].find(objC => objC.id === obj.category)
-							if (categoryName && !finalObj['polar']['labels'].includes(categoryName)) finalObj['polar']['labels'].push(categoryName)
-
-							if(!finalObj['polar']['data'].hasOwnProperty(categoryName)) finalObj['polar']['data'][categoryName] = 0
-							finalObj['polar']['data'][categoryName] += obj.amount
-
-							const catColor = `rgba(${color.r || 255}, ${color.g || 0}, ${color.b || 0}, ${color.a || 0})`
-							finalObj['polar']['backgroundColor'].push(catColor)
-						}
-					});
-
-					if (Object.keys(finalObj['polar']['data']).length > 0) {
-						finalObj['polar']['datasets'] = [{ data: Object.values(finalObj['polar']['data']), backgroundColor: finalObj['polar']['backgroundColor'] }]
-					}
 				})
 
-				this.BarChartData = finalObj['bar']
-				this.PolarChartData = finalObj['polar']
+				if(Object.keys(finalObj.datasets).length > 0) this.ExpenseIncomeData = finalObj
+			}
+
+			return {}
+		},
+
+		// Create expense income categories chart data
+		createExpenseIncomeCatChart(timeline = 'weekly'){
+			if (!timeline) timeline = this.ChartTimeType
+			const dataArr = this.filterData(timeline)
+			
+			if (dataArr && Object.keys(dataArr.data).length > 0) {
+				const finalObj = {labels: ['Categories'],	datasets:[]}
+				
+				Object.keys(dataArr.data).forEach(type => {
+					const currentObj = dataArr.data[type]
+					if (currentObj.length > 0) {
+						let catData = {data: {}, color: {}}
+						currentObj.forEach(obj => {
+							if (obj.hasOwnProperty('category') && obj.category) {
+								const categoryType = (type == 'expense') ? 'expense_types' : 'income_types'
+								const {title: categoryName, color} = this.UserSettings[categoryType].find(objC => objC.id === obj.category)
+
+								if(!catData['data'].hasOwnProperty(categoryName)) catData['data'][categoryName] = 0
+								catData['data'][categoryName] += obj.amount
+								catData['color'][categoryName] = `rgba(${color.r || 255}, ${color.g || 0}, ${color.b || 0}, ${color.a || 0})`
+							}
+						})
+
+						if (Object.keys(catData['data']).length > 0) {
+							Object.keys(catData['data']).forEach(obj => {
+								const newObj = {label: obj, data: [ catData['data'][obj] ], backgroundColor: catData['color'][obj]}
+								finalObj.datasets.push(newObj)
+							})
+						}
+					}
+
+				})
+
+				if(finalObj.datasets.length > 0) this.CategoryChartData = finalObj
 			}
 
 			return {}
