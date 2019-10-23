@@ -1,7 +1,7 @@
 <template>
   <v-app :key="$store.state.global.updateView">
     <!-- Navbar --> 
-    <Navbar></Navbar>  
+    <Navbar v-if="UserExists"></Navbar>  
 
     <v-content>
       
@@ -55,6 +55,10 @@ export default {
     }
   },
   computed:{
+    UserExists(){
+      return (this.$__firebase.fireauth.currentUser) ? true : false
+    },
+
     // Snackbar message
     snackbarMsg(){
       if(this.$store.state.global.snackbar.msg){
