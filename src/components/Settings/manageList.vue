@@ -43,6 +43,7 @@
 												<v-switch v-model="item.del" :label="`Currently ${(!item.del) ? 'active' : 'inactive'}`" @change="updateItem(item)"></v-switch>
 											</v-flex>
 										</v-layout>
+										<v-divider></v-divider>
 									</v-flex>
 								</v-layout>
 							</template>
