@@ -160,8 +160,8 @@ export default {
 	},
 	watch:{
 		ChartTimeType(val){
-			this.createExpenseIncomeCatChart()
-			this.createExpenseIncomeChart()
+			this.createExpenseIncomeCatChart(val)
+			this.createExpenseIncomeChart(val)
 		}
 	},
 	computed:{
@@ -402,7 +402,10 @@ export default {
 						currentObj.forEach(obj => {
 							if (obj.hasOwnProperty('category') && obj.category) {
 								const categoryType = (type == 'expense') ? 'expense_types' : 'income_types'
-								const {title: categoryName, color} = this.UserSettings[categoryType].find(objC => objC.id === obj.category)
+								const UserSettingsObj = this.UserSettings[categoryType].find(objC => objC.id === obj.category)
+
+								const categoryName = (UserSettingsObj && UserSettingsObj.hasOwnProperty('title')) ? UserSettingsObj.title : 'Other'
+								const color = (UserSettingsObj && UserSettingsObj.hasOwnProperty('color')) ? UserSettingsObj.color : {r: 123, g: 120, b: 20, a: 40}
 
 								if(!catData['data'].hasOwnProperty(categoryName)) catData['data'][categoryName] = 0
 								catData['data'][categoryName] += obj.amount
